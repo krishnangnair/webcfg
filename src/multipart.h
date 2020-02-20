@@ -29,7 +29,9 @@ typedef struct
 
 typedef struct {
     multipartdocs_t *entries; 
-    size_t   entries_count;      
+    size_t   entries_count; 
+    char *version;
+    char *transaction_id;     
 } multipart_t;
 
 

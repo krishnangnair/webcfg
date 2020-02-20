@@ -88,7 +88,7 @@ int writeToFile(char *filename, char *data)
 
 void test_portmappingpack_unpack()
 {
-	/*subdoc_t *packSubdocData = NULL;
+	subdoc_t *packSubdocData = NULL;
         size_t subdocPackSize = -1;
         void *data = NULL;
         
@@ -124,7 +124,7 @@ void test_portmappingpack_unpack()
 	printf("subdocPackSize is %ld\n", subdocPackSize);
 	printf("data packed is %s\n", (char*)data);
         
-        portMappingPackUnpack(data);*/
+        portMappingPackUnpack(data);
 /*
 
 	int len=0;
@@ -148,15 +148,15 @@ void test_portmappingpack_unpack()
 
 }
 
-//void portMappingPackUnpack(char *blob)
-void portMappingPackUnpack()
+void portMappingPackUnpack(char *blob)
+//void portMappingPackUnpack()
 {
-   	//data_t *packRootData = NULL;
-	//size_t rootPackSize=-1;
-	//void *data =NULL;
+   	data_t *packRootData = NULL;
+	size_t rootPackSize=-1;
+	void *data =NULL;
 	int err;
 	
-	/*packRootData = ( data_t * ) malloc( sizeof( data_t ) );
+	packRootData = ( data_t * ) malloc( sizeof( data_t ) );
 	if(packRootData != NULL)
 	{
 		memset(packRootData, 0, sizeof(data_t));
@@ -173,18 +173,18 @@ void portMappingPackUnpack()
 	printf("webcfg_pack_rootdoc\n");
 	rootPackSize = portmap_pack_rootdoc( blob, packRootData, &data );
 	printf("rootPackSize is %ld\n", rootPackSize);
-	printf("data packed is %s\n", (char*)data); */
+	printf("data packed is %s\n", (char*)data); 
         
-	//int status = writeToFile("buff.bin", (char*)data);
+	int status = writeToFile("buff.bin", (char*)data);
         //int status = writeToFile("buff.bin", (char*)blob);
-	//if(status)
-	//{
+	if(status)
+	{
 		portmapping_t *pm;
-		int len =0, i =0;
+		int len =0;//, i =0;
 		void* rootbuff;
 		char *binfileData = NULL;
 
-		int status = readFromFile("portmapping-server-response.bin", &binfileData , &len);
+		int status = readFromFile("buff.bin", &binfileData , &len);
 	
 		if(status)
 		{
@@ -195,22 +195,22 @@ void portMappingPackUnpack()
 			pm = portmapping_convert( rootbuff, len+1 );
 			err = errno;
 			printf( "errno: %s\n", portmapping_strerror(err) );
-			CU_ASSERT_FATAL( NULL != pm );
-			CU_ASSERT_FATAL( NULL != pm->entries );
+			//CU_ASSERT_FATAL( NULL != pm );
+			//CU_ASSERT_FATAL( NULL != pm->entries );
 			CU_ASSERT_FATAL( 1 == pm->entries_count );
                         //CU_ASSERT_STRING_EQUAL("154363892090392891829182011",pm->version);
 			CU_ASSERT_STRING_EQUAL( "Device.NAT.PortMapping.", pm->entries[0].name );
 			//CU_ASSERT_STRING_EQUAL( blob, pm->entries[0].value );
-			CU_ASSERT_FATAL( 0 == pm->entries[0].type );
-			for(i = 0; i < (int)pm->entries_count ; i++)
-			{
-				printf("pm->entries[%d].name %s\n", i, pm->entries[i].name);
-				printf("pm->entries[%d].value %s\n" , i, pm->entries[i].value);
-				printf("pm->entries[%d].type %d\n", i, pm->entries[i].type);
-			}
+			CU_ASSERT_FATAL( 2 == pm->entries[0].type );
+			//for(i = 0; i < (int)pm->entries_count ; i++)
+			//{
+				printf("pm->entries[0].name %s\n",  pm->entries[0].name);
+				printf("pm->entries[0].value %s\n" , pm->entries[0].value);
+				printf("pm->entries[0].type %d\n", pm->entries[0].type);
+			//}
 
 			//decode inner blob
-			portmappingdoc_t *rpm;
+		/*	portmappingdoc_t *rpm;
 			printf("--------------decode blob-------------\n");
 			rpm = portmappingdoc_convert( pm->entries[0].value, strlen(pm->entries[0].value) );
 			printf("blob len %lu\n", strlen(pm->entries[0].value));
@@ -218,7 +218,7 @@ void portMappingPackUnpack()
 			printf( "errno: %s\n", portmappingdoc_strerror(err) );
 			CU_ASSERT_FATAL( NULL != rpm );
 			CU_ASSERT_FATAL( NULL != rpm->entries );
-			//CU_ASSERT_FATAL( 4 == rpm->entries_count );
+			//CU_ASSERT_FATAL( 4 == rpm->entries_count );*/
 			
 /*
 			//first blob
@@ -242,7 +242,7 @@ void portMappingPackUnpack()
 			CU_ASSERT_FATAL( 65535 == rpm->entries[3].version );
 
 */
-			for(i = 0; i < (int)rpm->entries_count ; i++)
+			/*for(i = 0; i < (int)rpm->entries_count ; i++)
 			{
 				printf("rpm->entries[%d].InternalClient %s\n", i, rpm->entries[i].internal_client);
 				printf("rpm->entries[%d].ExternalPortEndRange %s\n" , i, rpm->entries[i].external_port_end_range);
@@ -252,11 +252,11 @@ void portMappingPackUnpack()
 				printf("rpm->entries[%d].external_port %s\n", i, rpm->entries[i].external_port);
 			}
 
-			portmappingdoc_destroy( rpm );
+			portmappingdoc_destroy( rpm );*/
 			portmapping_destroy( pm );
 		}
 
-	//}
+	}
 
 		
 }

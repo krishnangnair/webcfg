@@ -30,6 +30,7 @@ typedef struct
 typedef struct {
     param_t *entries;       
     size_t      entries_count;
+    char * version;
 } webcfgparam_t;
 
 /**

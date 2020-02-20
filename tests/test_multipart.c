@@ -25,6 +25,7 @@
 #include "../src/macbindingdoc.h"
 #include "../src/portmappingdoc.h"
 #include "../src/portmappingparam.h"
+#include "../src/portmappingpack.h"
 #include <msgpack.h>
 #include <curl/curl.h>
 #include <base64.h>
@@ -149,11 +150,13 @@ void test_multipart()
 		printf("subLen is %d\n", (int)subLen);
 		printf("--------------decode root doc-------------\n");
 		pm = webcfgparam_convert( subdbuff, subLen+1 );
-		printf("blob_size is %d\n", pm->entries[0].value_size);
+		//printf("blob_size is %d\n", pm->entries[0].value_size);
                 err = errno;
 		printf( "errno: %s\n", webcfgparam_strerror(err) );
 		CU_ASSERT_FATAL( NULL != pm );
 		CU_ASSERT_FATAL( NULL != pm->entries );
+                CU_ASSERT_FATAL( NULL != pm->version );
+                printf("pm->version is %s\n",pm->version);
 		for(i = 0; i < (int)pm->entries_count ; i++)
 		{
 			printf("pm->entries[%d].name %s\n", i, pm->entries[i].name);
@@ -182,9 +185,10 @@ void test_multipart()
 		macbindingdoc_destroy( rpm );*/
 
 		/************ portmapping inner blob decode ****************/
-
+/*
 		portmappingdoc_t *rpm;
 		printf("--------------decode blob-------------\n");
+                printf("pm->entries[0].value_size is : %d\n",pm->entries[0].value_size);
 		rpm = portmappingdoc_convert( pm->entries[0].value, pm->entries[0].value_size );
 		err = errno;
 		printf( "errno: %s\n", portmappingdoc_strerror(err) );
@@ -202,7 +206,7 @@ void test_multipart()
 			printf("rpm->entries[%d].external_port %s\n", i, rpm->entries[i].external_port);
 		}
 
-		portmappingdoc_destroy( rpm );
+		portmappingdoc_destroy( rpm );*/
 
 		webcfgparam_destroy( pm );
 	}	

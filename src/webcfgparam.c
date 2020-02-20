@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <string.h>
 #include <msgpack.h>
+#include <stdarg.h>
 
 #include "helpers.h"
 #include "webcfgparam.h"
@@ -45,7 +46,8 @@ enum {
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
 int process_params( param_t *e, msgpack_object_map *map );
-int process_webcfgparam( webcfgparam_t *pm, msgpack_object *obj );
+//int process_webcfgparam( webcfgparam_t *pm, msgpack_object *obj );
+int process_webcfgparam( webcfgparam_t *pm,int num, ...);
 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
@@ -119,7 +121,7 @@ const char* webcfgparam_strerror( int errnum )
 int process_params( param_t *e, msgpack_object_map *map )
 {
     int left = map->size;
-    uint8_t objects_left = 0x03;
+    uint8_t objects_left = 0x04;
     msgpack_object_kv *p;
 
     p = map->ptr;
@@ -135,15 +137,15 @@ int process_params( param_t *e, msgpack_object_map *map )
                         e->type = (uint16_t) p->val.via.u64;
 			//printf("e->type is %d\n", e->type);
                     }
-                    objects_left &= ~(1 << 0);
-		    //printf("objects_left after datatype %d\n", objects_left);
+                    objects_left &= ~(1 << 2);
+		    printf("objects_left after datatype %d\n", objects_left);
                 }
             } else if( MSGPACK_OBJECT_STR == p->val.type ) {
                 if( 0 == match(p, "name") ) {
                     e->name = strndup( p->val.via.str.ptr, p->val.via.str.size );
 		    //printf("e->name is %s\n", e->name);
-                    objects_left &= ~(1 << 1);
-		    //printf("objects_left after name %d\n", objects_left);
+                    objects_left &= ~(1 << 0);
+		    printf("objects_left after name %d\n", objects_left);
                 }
 		if( 0 == match(p, "value") ) {
                     //e->value = strndup( p->val.via.str.ptr, p->val.via.str.size );
@@ -151,8 +153,8 @@ int process_params( param_t *e, msgpack_object_map *map )
 		    e->value_size =(int) p->val.via.str.size;
 		    printf("e->value_size is %d\n", e->value_size);
 		    //printf("e->value is %s\n", e->value);
-                    objects_left &= ~(1 << 2);
-		    //printf("objects_left after value %d\n", objects_left);
+                    objects_left &= ~(1 << 1);
+		    printf("objects_left after value %d\n", objects_left);
                 }
 	
             }
@@ -168,13 +170,26 @@ int process_params( param_t *e, msgpack_object_map *map )
     return (0 == objects_left) ? 0 : -1;
 }
 
-int process_webcfgparam( webcfgparam_t *pm, msgpack_object *obj )
-{
+int process_webcfgparam( webcfgparam_t *pm,int num, ...)
+{   
+    va_list valist; 
+    va_start(valist, num);
+    
+    msgpack_object *obj = va_arg(valist, msgpack_object *);
     msgpack_object_array *array = &obj->via.array;
+
     if( 0 < array->size ) {
         size_t i;
-
+        
         pm->entries_count = array->size;
+
+        msgpack_object *obj1 = va_arg(valist, msgpack_object *);
+        pm->version = strndup(obj1->via.str.ptr,obj1->via.str.size);
+       
+        va_end(valist);
+
+        printf("The version in webcfg is %s\n",pm->version);
+
         pm->entries = (param_t *) malloc( sizeof(param_t) * pm->entries_count );
         if( NULL == pm->entries ) {
             pm->entries_count = 0;
@@ -182,8 +197,11 @@ int process_webcfgparam( webcfgparam_t *pm, msgpack_object *obj )
         }
 
         memset( pm->entries, 0, sizeof(param_t) * pm->entries_count );
+       
         for( i = 0; i < pm->entries_count; i++ ) {
+              printf("The array type is %d\n",array->ptr[i].type);
             if( MSGPACK_OBJECT_MAP != array->ptr[i].type ) {
+                printf("Inside PM invalid");
                 errno = PM_INVALID_PM_OBJECT;
                 return -1;
             }

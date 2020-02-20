@@ -78,14 +78,20 @@ void portmapping_destroy( portmapping_t *pm )
         size_t i;
         for( i = 0; i < pm->entries_count; i++ ) {
             if( NULL != pm->entries[i].name ) {
+                printf("Inside pm->entries.name\n");
                 free( pm->entries[i].name );
+                printf("after pm->entries.name\n");
             }
 	    if( NULL != pm->entries[i].value ) {
-                free( pm->entries[i].value );
+                printf("Inside pm->entries.value\n");
+               // free( pm->entries[i].value );
+                printf("after pm->entries.value\n");
             }
         }
         if( NULL != pm->entries ) {
+            printf("Inside pm->entries\n");
             free( pm->entries );
+            printf("after pm->entries\n");
         }
         free( pm );
     }
@@ -250,31 +256,32 @@ int process_entry( pm_entry_t *e, msgpack_object_map *map )
     p = map->ptr;
     while( (0 < objects_left) && (0 < left--) ) {
         if( MSGPACK_OBJECT_STR == p->key.type ) {
+           // printf("value of key is : %s\n",p->key.via.str.ptr);
             if( MSGPACK_OBJECT_POSITIVE_INTEGER == p->val.type ) {
                 if( 0 == match(p, "dataType") ) {
                     if( UINT16_MAX < p->val.via.u64 ) {
-			printf("e->type is %d\n", e->type);
+			//printf("e->type is %d\n", e->type);
                         errno = PM_INVALID_DATATYPE;
                         return -1;
                     } else {
                         e->type = (uint16_t) p->val.via.u64;
-			printf("e->type is %d\n", e->type);
+			//printf("e->type is %d\n", e->type);
                     }
                     objects_left &= ~(1 << 0);
-		    printf("objects_left after datatype %d\n", objects_left);
+		  //  printf("objects_left after datatype %d\n", objects_left);
                 }
             } else if( MSGPACK_OBJECT_STR == p->val.type ) {
                 if( 0 == match(p, "name") ) {
                     e->name = strndup( p->val.via.str.ptr, p->val.via.str.size );
-		    printf("e->name is %s\n", e->name);
+		    //printf("e->name is %s\n", e->name);
                     objects_left &= ~(1 << 1);
-		    printf("objects_left after name %d\n", objects_left);
+		    //printf("objects_left after name %d\n", objects_left);
                 }
 		if( 0 == match(p, "value") ) {
                     e->value = strndup( p->val.via.str.ptr, p->val.via.str.size );
-		    printf("e->value is %s\n", e->value);
+		   // printf("e->value is %s\n", e->value);
                     objects_left &= ~(1 << 2);
-		    printf("objects_left after value %d\n", objects_left);
+		   // printf("objects_left after value %d\n", objects_left);
                 }
 	
             }

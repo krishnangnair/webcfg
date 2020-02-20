@@ -56,9 +56,26 @@ typedef struct subdoc_struct {
     struct subdoc *subdoc_items;
 } subdoc_t;
 
+//for doc append
+typedef struct appenddoc_struct{
+    char * version;
+    char * transaction_id;
+    size_t *count;
+}appenddoc_t;
+
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
+
+/**
+ *  Packs portmapping append config doc.
+ *
+ *  @param 
+ *
+ *  @return 0 if the operation was a success, error otherwise
+ */
+
+ssize_t portmap_pack_appenddoc(const appenddoc_t *appenddocData,void **data);
 
 /**
  *  Packs portmapping sub config doc.

@@ -16,8 +16,9 @@
 #include <errno.h>
 #include <string.h>
 #include <msgpack.h>
+#include <stdarg.h>
 
-#include "array_helpers.h"
+#include "helpers.h"
 #include "portmappingdoc.h"
 
 /*----------------------------------------------------------------------------*/
@@ -56,8 +57,8 @@ enum {
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
 int process_portdocparams( portdoc_t *e, msgpack_object_map *map );
-int process_portmappingdoc( portmappingdoc_t *pm, msgpack_object *obj );
-
+//int process_portmappingdoc( portmappingdoc_t *pm, msgpack_object *obj );
+int process_portmappingdoc( portmappingdoc_t *pm, int num, ...); 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -65,7 +66,8 @@ int process_portmappingdoc( portmappingdoc_t *pm, msgpack_object *obj );
 /* See portmappingdoc.h for details. */
 portmappingdoc_t* portmappingdoc_convert( const void *buf, size_t len )
 {
-	return helper_convert_array( buf, len, sizeof(portmappingdoc_t), true,
+	return helper_convert( buf, len, sizeof(portmappingdoc_t), "portforwarding", 
+                            MSGPACK_OBJECT_ARRAY, true,
                            (process_fn_t) process_portmappingdoc,
                            (destroy_fn_t) portmappingdoc_destroy );
 }
@@ -142,7 +144,7 @@ int process_portdocparams( portdoc_t *e, msgpack_object_map *map )
         if( MSGPACK_OBJECT_STR == p->key.type ) {
                //printf("value of key is : %s\n",p->key.via.str.ptr);
               if( MSGPACK_OBJECT_STR == p->val.type ) {
-                //printf("value of key is : %s\n",p->key.via.str.ptr);
+               // printf("value of key is : %s\n",p->key.via.str.ptr);
                 if( 0 == strncmp(p->key.via.str.ptr, "ExternalPortEndRange",strlen("ExternalPortEndRange"))) {
                     e->external_port_end_range = strndup( p->val.via.str.ptr, p->val.via.str.size );
                     //printf("value external port range is : %s\n",e->external_port_end_range);
@@ -207,23 +209,44 @@ int process_portdocparams( portdoc_t *e, msgpack_object_map *map )
     return (0 == objects_left) ? 0 : -1;
 }
 
-int process_portmappingdoc( portmappingdoc_t *pm, msgpack_object *obj )
-{
+int process_portmappingdoc( portmappingdoc_t *pm,int num, ... )
+{   
+    va_list valist;
+    va_start(valist, num);
+    
+    msgpack_object *obj = va_arg(valist, msgpack_object *);
     msgpack_object_array *array = &obj->via.array;
+
+    printf("array->size is %d\n",array->size);
     if( 0 < array->size ) {
         size_t i;
 
         pm->entries_count = array->size;
        
+        msgpack_object *obj1 = va_arg(valist, msgpack_object *);
+        pm->version = strndup(obj1->via.str.ptr,obj1->via.str.size);
+
+        msgpack_object *obj2 = va_arg(valist, msgpack_object *);
+        pm->transaction_id = strndup(obj2->via.str.ptr,obj2->via.str.size);
+
+        va_end(valist);
+
+        printf("pm->version in blob is %s\n",pm->version);
+        printf("pm->transaction_id in blob is %s\n",pm->transaction_id);
+
         pm->entries = (portdoc_t *) malloc( sizeof(portdoc_t) * pm->entries_count );
+
         if( NULL == pm->entries ) {
+            printf("entries count is null\n");
             pm->entries_count = 0;
             return -1;
         }
 
         memset( pm->entries, 0, sizeof(portdoc_t) * pm->entries_count );
+
         for( i = 0; i < pm->entries_count; i++ ) {
             if( MSGPACK_OBJECT_MAP != array->ptr[i].type ) {
+                printf("invalid PM_OBJECT \n");
                 errno = PM_INVALID_PM_OBJECT;
                 return -1;
             }

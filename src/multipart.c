@@ -19,12 +19,14 @@
 #include "webcfgparam.h"
 #include "portmappingdoc.h"
 #include "portmappingparam.h"
+#include "portmappingpack.h"
 #include <uuid/uuid.h>
 #include <string.h>
 #include <stdlib.h>
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
+#define METADATA_MAP_SIZE                2
 #define MAX_HEADER_LEN			4096
 #define ETAG_HEADER 		       "Etag:"
 #define CURL_TIMEOUT_SEC	   25L
@@ -55,6 +57,9 @@ void createCurlheader( struct curl_slist *list, struct curl_slist **header_list)
 void print_multipart(char *ptr, int no_of_bytes, int part_no);
 void parse_multipart(char *ptr, int no_of_bytes, multipartdocs_t *m, int *no_of_subdocbytes);
 void multipart_destroy( multipart_t *m );
+void xxd( const void *buffer, const size_t length );
+static int alterMap( char * buf );
+size_t appendEncodedData( void **appendData, void *encodedBuffer, size_t encodedSize, void *metadataPack, size_t metadataSize );
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -216,6 +221,7 @@ int webcfg_http_request(char *webConfigURL, char **configData, int r_count, long
 			char *ptr_lb1=str_body;
 			char *ptr_count = str_body;
 			int index1=0, index2 =0 ;
+                        webcfgparam_t *pm;
 
 			/*For Subdocs count*/
 			while((ptr_count - str_body) < (int)data.size )
@@ -295,9 +301,127 @@ int webcfg_http_request(char *webConfigURL, char **configData, int r_count, long
 				//process one subdoc
 				*sub_buff = mp->entries[m].data;
 				*sub_len = subdocbytes;
+                                //mp->version = strndup(mp->entries[m].etag,strlen(mp->entries[m].etag));
+                                //mp-> 
 				printf("*sub_len %d\n", *sub_len);
 			}
-			//printf("Number of sub docs %d\n",((num_of_parts-2)/6));
+                        
+                        //decode root doc
+			//printf("subLen is %d\n", (int)sub_len);
+			printf("--------------decode root doc-------------\n");
+			pm = webcfgparam_convert( *sub_buff, *sub_len+1 );
+			printf("blob_size is %d\n", pm->entries[0].value_size);
+		        //err = errno;
+			//printf( "errno: %s\n", webcfgparam_strerror(err) );
+			//CU_ASSERT_FATAL( NULL != pm );
+			//CU_ASSERT_FATAL( NULL != pm->entries );
+			for(int i = 0; i < (int)pm->entries_count ; i++)
+			{
+				printf("pm->entries[%d].name %s\n", i, pm->entries[i].name);
+				printf("pm->entries[%d].value %s\n" , i, pm->entries[i].value);
+				printf("pm->entries[%d].type %d\n", i, pm->entries[i].type);
+			}
+
+                        appenddoc_t *appenddata = NULL;
+                        size_t appenddocPackSize = -1;
+                        size_t embeddeddocPackSize = -1;
+                        void *appenddocdata = NULL;
+                        void *embeddeddocdata = NULL;
+ 
+                        msgpack_zone mempool;
+			msgpack_object deserialized;
+			msgpack_unpack_return unpack_ret;
+
+                        appenddata = (appenddoc_t *) malloc(sizeof(appenddoc_t ));
+                        if(appenddata != NULL)
+                        {   
+                            memset(appenddata, 0, sizeof(appenddoc_t));
+ 
+                            appenddata->version = strdup ("32566738870767626680659770");
+                            appenddata->transaction_id = strdup("portforwarding-1");
+                        }
+
+                        printf("Append Doc \n");
+                        appenddocPackSize = portmap_pack_appenddoc(appenddata, &appenddocdata);
+                        printf("appenddocPackSize is %ld\n", appenddocPackSize);
+	                printf("data packed is %s\n", (char*)appenddocdata);
+                        
+
+                        printf("---------------------------------------------------------------\n");
+                        embeddeddocPackSize = appendEncodedData(&embeddeddocdata, (void *)pm->entries[0].value, (size_t)pm->entries[0].value_size, appenddocdata, appenddocPackSize);
+                         printf("embeddeddocPackSize is %ld\n", embeddeddocPackSize);
+	                printf("data packed is %s\n", (char*)embeddeddocdata);
+
+               //Start of msgpack decoding just to verify
+		printf("----Start of msgpack decoding----\n");
+		msgpack_zone_init(&mempool, 2048);
+		unpack_ret = msgpack_unpack(embeddeddocdata, embeddeddocPackSize, NULL, &mempool, &deserialized);
+		printf("unpack_ret is %d\n",unpack_ret);
+		switch(unpack_ret)
+		{
+			case MSGPACK_UNPACK_SUCCESS:
+				printf("MSGPACK_UNPACK_SUCCESS :%d\n",unpack_ret);
+				printf("\nmsgpack decoded data is:");
+				msgpack_object_print(stdout, deserialized);
+			break;
+			case MSGPACK_UNPACK_EXTRA_BYTES:
+				printf("MSGPACK_UNPACK_EXTRA_BYTES :%d\n",unpack_ret);
+			break;
+			case MSGPACK_UNPACK_CONTINUE:
+				printf("MSGPACK_UNPACK_CONTINUE :%d\n",unpack_ret);
+			break;
+			case MSGPACK_UNPACK_PARSE_ERROR:
+				printf("MSGPACK_UNPACK_PARSE_ERROR :%d\n",unpack_ret);
+			break;
+			case MSGPACK_UNPACK_NOMEM_ERROR:
+				printf("MSGPACK_UNPACK_NOMEM_ERROR :%d\n",unpack_ret);
+			break;
+			default:
+				printf("Message Pack decode failed with error: %d\n", unpack_ret);
+		}
+
+		msgpack_zone_destroy(&mempool);
+		printf("----End of msgpack decoding----\n");
+                printf("------PARSING--------------------\n");
+                
+                portmappingdoc_t *rpm;
+		//printf("--------------decode blob-------------\n");
+               // printf("pm->entries[0].value_size is : %d\n",pm->entries[0].value_size);
+		rpm = portmappingdoc_convert( embeddeddocdata, embeddeddocPackSize );
+		//err = errno;
+		//printf( "errno: %s\n", portmappingdoc_strerror(err) );
+		//CU_ASSERT_FATAL( NULL != rpm );
+		//CU_ASSERT_FATAL( NULL != rpm->entries );
+		printf("rpm->entries_count is %ld\n", rpm->entries_count);
+
+		for(int i = 0; i < (int)rpm->entries_count ; i++)
+		{
+			printf("rpm->entries[%d].InternalClient %s\n", i, rpm->entries[i].internal_client);
+			printf("rpm->entries[%d].ExternalPortEndRange %s\n" , i, rpm->entries[i].external_port_end_range);
+			printf("rpm->entries[%d].Enable %s\n", i, rpm->entries[i].enable?"true":"false");
+			printf("rpm->entries[%d].Protocol %s\n", i, rpm->entries[i].protocol);
+			printf("rpm->entries[%d].Description %s\n", i, rpm->entries[i].description);
+			printf("rpm->entries[%d].external_port %s\n", i, rpm->entries[i].external_port);
+		}
+
+		portmappingdoc_destroy( rpm );
+                printf("------END OF PARSING--------------------\n");
+		//End of msgpack decoding
+			
+
+
+                       //printf("Number of sub docs %d\n",((num_of_parts-2)/6));
+                        
+
+                        //printf("Subdoc ....................\n");
+                         //xxd(*sub_buff, (size_t)subdocbytes);
+                         printf("Append ....................\n");
+                         xxd(appenddocdata, appenddocPackSize);
+                      //   printf("embedded ....................\n");
+                        // xxd(embeddeddocdata, embeddeddocPackSize);
+
+
+
 			*configData=str_body;
 		}
                 //multipart_destroy(mp);
@@ -525,23 +649,147 @@ void parse_multipart(char *ptr, int no_of_bytes, multipartdocs_t *m, int *no_of_
 	void * mulsubdoc;
 
 	/*for storing respective values */
-	if(0 == strncasecmp(ptr,"Namespace",strlen("Namespace")-1))
-	{
-		m->name_space = strndup(ptr,no_of_bytes);
-		printf("The Namespace is %s\n",m->name_space);
+        if(0 == strncasecmp(ptr,"Namespace",strlen("Namespace")-1)){
+             m->name_space = strndup(ptr+(strlen("Namespace: ")),no_of_bytes-((strlen("Namespace: "))));
+             printf("The Namespace is %s\n",m->name_space);
+          }
+          else if(0 == strncasecmp(ptr,"Etag",strlen("Etag")-1)){
+             m->etag = strndup(ptr+(strlen("Etag: ")),no_of_bytes-((strlen("Etag: "))));
+             printf("The Etag is %s\n",m->etag);
+          }
+          else if(strstr(ptr,"parameters")){
+             m->data = ptr;
+             mulsubdoc = (void *) ptr;
+             printf("The paramters is %s\n",m->data);
+             webcfgparam_convert( mulsubdoc, no_of_bytes );
+	     *no_of_subdocbytes = no_of_bytes;
+	     printf("*no_of_subdocbytes is %d\n", *no_of_subdocbytes);
 	}
-	else if(0 == strncasecmp(ptr,"Etag",strlen("Etag")-1))
+}
+
+
+/**
+ * @brief alterMap function to change MAP size of encoded msgpack object.
+ *
+ * @param[in] encodedBuffer msgpack object
+ * @param[out] return 0 in success or less than 1 in failure case
+ */
+
+static int alterMap( char * buf )
+{
+    //Extract 1st byte from binary stream which holds type and map size
+    unsigned char *byte = ( unsigned char * )( &( buf[0] ) ) ;
+    int mapSize;
+    printf("First byte in hex : %x\n", 0xff & *byte );
+    //Calculate map size
+    mapSize = ( 0xff & *byte ) % 0x10;
+    printf("Map size is :%d\n", mapSize );
+
+    if( mapSize == 15 ) {
+        printf("Msgpack Map (fixmap) is already at its MAX size i.e. 15\n" );
+        return -1;
+    }
+
+    *byte = *byte + METADATA_MAP_SIZE;
+    mapSize = ( 0xff & *byte ) % 0x10;
+    printf("New Map size : %d\n", mapSize );
+    printf("First byte in hex : %x\n", 0xff & *byte );
+    //Update 1st byte with new MAP size
+    buf[0] = *byte;
+    return 0;
+}
+
+/**
+ * @brief appendEncodedData function to append two encoded buffer and change MAP size accordingly.
+ * 
+ * @note appendEncodedData function allocates memory for buffer, caller needs to free the buffer(appendData)in
+ * both success or failure case. use wrp_free_struct() for free
+ *
+ * @param[in] encodedBuffer msgpack object (first buffer)
+ * @param[in] encodedSize is size of first buffer
+ * @param[in] metadataPack msgpack object (second buffer)
+ * @param[in] metadataSize is size of second buffer
+ * @param[out] appendData final encoded buffer after append
+ * @return  appended total buffer size or less than 1 in failure case
+ */
+
+size_t appendEncodedData( void **appendData, void *encodedBuffer, size_t encodedSize, void *metadataPack, size_t metadataSize )
+{
+    //Allocate size for final buffer
+    //printf("before appenddata malloc");
+    *appendData = ( void * )malloc( sizeof( char * ) * ( encodedSize + metadataSize ) );
+       // printf("after appenddata malloc");
+	if(*appendData != NULL)
 	{
-		m->etag = strndup(ptr,no_of_bytes);
-		printf("The Etag is %s\n",m->etag);
+		memcpy( *appendData, encodedBuffer, encodedSize );
+		//Append 2nd encoded buf with 1st encoded buf
+		memcpy( *appendData + ( encodedSize ), metadataPack, metadataSize );
+		//Alter MAP
+		int ret = alterMap( ( char * ) * appendData );
+
+		if( ret ) {
+		    return -1;
+		}
+		return ( encodedSize + metadataSize );
 	}
-	else if(strstr(ptr,"parameters"))
+	else
 	{
-		m->data = ptr;
-		mulsubdoc = (void *) ptr;
-		printf("The paramters is %s\n",m->data);
-		webcfgparam_convert( mulsubdoc, no_of_bytes );
-		*no_of_subdocbytes = no_of_bytes;
-		printf("*no_of_subdocbytes is %d\n", *no_of_subdocbytes);
+		printf("Memory allocation failed\n" );
 	}
+    return -1;
+}
+
+
+void xxd( const void *buffer, const size_t length )
+{
+    const char hex[17] = "0123456789abcdef";
+    const char *data = (char *) buffer;
+    const char *end = &data[length];
+    char output[70];
+    size_t line = 0;
+
+    if( (NULL == buffer) || (0 == length) ) {
+        return;
+    }
+
+    while( data < end ) {
+        int shiftCount;
+        size_t i;
+        char *text_ptr = &output[51];
+        char *ptr = output;
+
+        /* Output the '00000000:' portion */
+        for (shiftCount=28; shiftCount >= 0; shiftCount -= 4) {
+            *ptr++ = hex[(line >> shiftCount) & 0x0F];
+        }
+        *ptr++ = ':';
+        *ptr++ = ' ';
+
+        for( i = 0; i < 16; i++ ) {
+            if( data < end ) {
+                *ptr++ = hex[(0x0f & (*data >> 4))];
+                *ptr++ = hex[(0x0f & (*data))];
+                if( (' ' <= *data) && (*data <= '~') ) {
+                    *text_ptr++ = *data;
+                } else {
+                    *text_ptr++ = '.';
+                }
+                data++;
+            } else {
+                *ptr++ = ' ';
+                *ptr++ = ' ';
+                *text_ptr++ = ' ';
+            }
+            if( 0x01 == (0x01 & i) ) {
+                *ptr++ = ' ';
+            }
+        }
+        line += 16;
+        *ptr = ' ';
+
+        *text_ptr++ = '\n';
+        *text_ptr = '\0';
+
+        puts( output );
+    }
 }
