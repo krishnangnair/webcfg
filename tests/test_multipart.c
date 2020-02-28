@@ -24,7 +24,6 @@
 #include "../src/helpers.h"
 #include "../src/macbindingdoc.h"
 #include "../src/portmappingdoc.h"
-#include "../src/portmappingparam.h"
 #include "../src/portmappingpack.h"
 #include <msgpack.h>
 #include <curl/curl.h>
@@ -247,19 +246,21 @@ int main( int argc, char *argv[] )
 	{
 		interface = strdup(argv[2]);
 	}
-	if( CUE_SUCCESS == CU_initialize_registry() ) {
-	add_suites( &suite );
+	if( CUE_SUCCESS == CU_initialize_registry() )
+        {
+	   add_suites( &suite );
 
-	if( NULL != suite ) {
-	    CU_basic_set_mode( CU_BRM_VERBOSE );
-	    CU_basic_run_tests();
-	    printf( "\n" );
-	    CU_basic_show_failures( CU_get_failure_list() );
-	    printf( "\n\n" );
-	    rv = CU_get_number_of_tests_failed();
-	}
+	   if( NULL != suite )
+           {
+	       CU_basic_set_mode( CU_BRM_VERBOSE );
+	       CU_basic_run_tests();
+	       printf( "\n" );
+	       CU_basic_show_failures( CU_get_failure_list() );
+	       printf( "\n\n" );
+	       rv = CU_get_number_of_tests_failed();
+	   }
 
-	CU_cleanup_registry();
+	   CU_cleanup_registry();
 
 	}
 	return rv;

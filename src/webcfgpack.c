@@ -118,7 +118,8 @@ ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data )
         return rv;
     }
 
-    if( sbuf.data ) {
+    if( sbuf.data )
+    {
         *data = ( char * ) malloc( sizeof( char ) * sbuf.size );
 
         if( NULL != *data ) {

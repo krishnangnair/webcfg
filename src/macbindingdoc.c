@@ -73,18 +73,23 @@ macbindingdoc_t* macbindingdoc_convert( const void *buf, size_t len )
 /* See macbindingdoc.h for details. */
 void macbindingdoc_destroy( macbindingdoc_t *pm )
 {
-    if( NULL != pm ) {
+    if( NULL != pm )
+    {
         size_t i;
-        for( i = 0; i < pm->entries_count; i++ ) {
-            if( NULL != pm->entries[i].chaddr ) {
+        for( i = 0; i < pm->entries_count; i++ )
+        {
+            if( NULL != pm->entries[i].chaddr )
+            {
                 free( pm->entries[i].chaddr );
             }
 	    
-	    if( NULL != pm->entries[i].yiaddr ) {
+	    if( NULL != pm->entries[i].yiaddr )
+            {
                 free( pm->entries[i].yiaddr );
             }
         }
-        if( NULL != pm->entries ) {
+        if( NULL != pm->entries )
+        {
             free( pm->entries );
         }
         free( pm );
@@ -109,7 +114,8 @@ const char* macbindingdoc_strerror( int errnum )
 
     while( (map[i].v != errnum) && (NULL != map[i].txt) ) { i++; }
 
-    if( NULL == map[i].txt ) {
+    if( NULL == map[i].txt )
+    {
         return "Unknown error.";
     }
 
@@ -135,29 +141,26 @@ int process_macdocparams( macdoc_t *e, msgpack_object_map *map )
 
     p = map->ptr;
     //printf("map size:%d\n",left);
-    while( (0 < objects_left) && (0 < left--) ) {
-        if( MSGPACK_OBJECT_STR == p->key.type ) {
-               //printf("value of key is : %s\n",p->key.via.str.ptr);
-              if( MSGPACK_OBJECT_STR == p->val.type ) {
-                //printf("value of key is : %s\n",p->key.via.str.ptr);
-                if( 0 == match(p, "Yiaddr") ) {
+    while( (0 < objects_left) && (0 < left--) )
+    {
+        if( MSGPACK_OBJECT_STR == p->key.type )
+        {
+              if( MSGPACK_OBJECT_STR == p->val.type )
+              {
+                if( 0 == match(p, "Yiaddr") )
+                {
                     e->yiaddr = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                     //printf("value Yiaddr is : %s\n",e->yiaddr);
-                    // printf("string compare : %d\n",p->key.via.str.size);
-                    // printf("string compare : %s\n",p->key.via.str.ptr);
                     objects_left &= ~(1 << 0);
-                     //printf("objects_left after Yiaddr %d\n", objects_left);
                 }
-                else if( 0 == match(p, "Chaddr") ) {
+                else if( 0 == match(p, "Chaddr") )
+                {
                     e->chaddr = strndup( p->val.via.str.ptr, p->val.via.str.size );
-                    //printf("value Chaddr is : %s\n",e->chaddr);
                     objects_left &= ~(1 << 1);
-                    //printf("objects_left after Chaddr %d\n", objects_left);
-                } 
-            	}
-            }
-           p++;  
+                }
+              }
         }
+           p++;
+    }
         
     
     //printf("objects_left after out %d\n", objects_left);
@@ -179,26 +182,30 @@ int process_macdocparams( macdoc_t *e, msgpack_object_map *map )
 int process_macbindingdoc( macbindingdoc_t *pm, msgpack_object *obj )
 {
     msgpack_object_array *array = &obj->via.array;
-    if( 0 < array->size ) {
+    if( 0 < array->size )
+    {
         size_t i;
 
         pm->entries_count = array->size;
        	printf("pm->entries_count is %ld\n", pm->entries_count);
         pm->entries = (macdoc_t *) malloc( sizeof(macdoc_t) * pm->entries_count );
-        if( NULL == pm->entries ) {
+        if( NULL == pm->entries )
+        {
             pm->entries_count = 0;
             return -1;
         }
 
         memset( pm->entries, 0, sizeof(macdoc_t) * pm->entries_count );
-        for( i = 0; i < pm->entries_count; i++ ) {
-            if( MSGPACK_OBJECT_MAP != array->ptr[i].type ) {
+        for( i = 0; i < pm->entries_count; i++ )
+        {
+            if( MSGPACK_OBJECT_MAP != array->ptr[i].type )
+            {
                 errno = PM_INVALID_PM_OBJECT;
                 return -1;
             }
-            //printf("\n");
-            //printf("i value is given as: %ld\n",i);
-            if( 0 != process_macdocparams(&pm->entries[i], &array->ptr[i].via.map) ) {
+
+            if( 0 != process_macdocparams(&pm->entries[i], &array->ptr[i].via.map) )
+            {
 		printf("process_macdocparams failed\n");
                 return -1;
             }

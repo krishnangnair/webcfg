@@ -26,7 +26,8 @@ typedef struct
     uint16_t version;
 } doc_t;
 
-typedef struct {
+typedef struct
+{
     doc_t *entries;       
     size_t      entries_count;
 } webcfgdoc_t;

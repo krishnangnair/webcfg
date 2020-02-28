@@ -45,7 +45,7 @@ enum {
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
-int process_params( param_t *e, msgpack_object_map *map );
+int process_params( wparam_t *e, msgpack_object_map *map );
 //int process_webcfgparam( webcfgparam_t *pm, msgpack_object *obj );
 int process_webcfgparam( webcfgparam_t *pm,int num, ...);
 
@@ -65,17 +65,22 @@ webcfgparam_t* webcfgparam_convert( const void *buf, size_t len )
 /* See webcfgparam.h for details. */
 void webcfgparam_destroy( webcfgparam_t *pm )
 {
-    if( NULL != pm ) {
+    if( NULL != pm )
+    {
         size_t i;
-        for( i = 0; i < pm->entries_count; i++ ) {
-            if( NULL != pm->entries[i].name ) {
+        for( i = 0; i < pm->entries_count; i++ )
+        {
+            if( NULL != pm->entries[i].name )
+            {
                 free( pm->entries[i].name );
             }
-	    if( NULL != pm->entries[i].value ) {
+	    if( NULL != pm->entries[i].value )
+            {
               //  free( pm->entries[i].value );
             }
         }
-        if( NULL != pm->entries ) {
+        if( NULL != pm->entries )
+    {
             free( pm->entries );
         }
         free( pm );
@@ -100,7 +105,8 @@ const char* webcfgparam_strerror( int errnum )
 
     while( (map[i].v != errnum) && (NULL != map[i].txt) ) { i++; }
 
-    if( NULL == map[i].txt ) {
+    if( NULL == map[i].txt )
+    {
         return "Unknown error.";
     }
 
@@ -111,50 +117,52 @@ const char* webcfgparam_strerror( int errnum )
 /*----------------------------------------------------------------------------*/
 
 /**
- *  Convert the msgpack map into the param_t structure.
+ *  Convert the msgpack map into the wparam_t structure.
  *
  *  @param e    the entry pointer
  *  @param map  the msgpack map pointer
  *
  *  @return 0 on success, error otherwise
  */
-int process_params( param_t *e, msgpack_object_map *map )
+int process_params( wparam_t *e, msgpack_object_map *map )
 {
     int left = map->size;
     uint8_t objects_left = 0x04;
     msgpack_object_kv *p;
 
     p = map->ptr;
-    while( (0 < objects_left) && (0 < left--) ) {
-        if( MSGPACK_OBJECT_STR == p->key.type ) {
-            if( MSGPACK_OBJECT_POSITIVE_INTEGER == p->val.type ) {
-                if( 0 == match(p, "dataType") ) {
-                    if( UINT16_MAX < p->val.via.u64 ) {
-			//printf("e->type is %d\n", e->type);
+    while( (0 < objects_left) && (0 < left--) )
+    {
+        if( MSGPACK_OBJECT_STR == p->key.type )
+        {
+            if( MSGPACK_OBJECT_POSITIVE_INTEGER == p->val.type )
+            {
+                if( 0 == match(p, "dataType") )
+                {
+                    if( UINT16_MAX < p->val.via.u64 )
+                    {
                         errno = PM_INVALID_DATATYPE;
                         return -1;
-                    } else {
+                    }
+                    else
+                    {
                         e->type = (uint16_t) p->val.via.u64;
-			//printf("e->type is %d\n", e->type);
                     }
                     objects_left &= ~(1 << 2);
-		    printf("objects_left after datatype %d\n", objects_left);
                 }
-            } else if( MSGPACK_OBJECT_STR == p->val.type ) {
-                if( 0 == match(p, "name") ) {
+            }
+            else if( MSGPACK_OBJECT_STR == p->val.type )
+            {
+                if( 0 == match(p, "name") )
+                {
                     e->name = strndup( p->val.via.str.ptr, p->val.via.str.size );
-		    //printf("e->name is %s\n", e->name);
                     objects_left &= ~(1 << 0);
-		    printf("objects_left after name %d\n", objects_left);
                 }
-		if( 0 == match(p, "value") ) {
-                    //e->value = strndup( p->val.via.str.ptr, p->val.via.str.size );
+		if( 0 == match(p, "value") )
+                {
 		    e->value = (char*)p->val.via.str.ptr;
 		    e->value_size =(int) p->val.via.str.size;
-		    printf("e->value_size is %d\n", e->value_size);
-		    //printf("e->value is %s\n", e->value);
                     objects_left &= ~(1 << 1);
-		    printf("objects_left after value %d\n", objects_left);
                 }
 	
             }
@@ -162,8 +170,11 @@ int process_params( param_t *e, msgpack_object_map *map )
         p++;
     }
 
-    if( 1 & objects_left ) {
-    } else {
+    if( 1 & objects_left )
+    {
+    }
+    else
+    {
         errno = PM_OK;
     }
 
@@ -178,7 +189,8 @@ int process_webcfgparam( webcfgparam_t *pm,int num, ...)
     msgpack_object *obj = va_arg(valist, msgpack_object *);
     msgpack_object_array *array = &obj->via.array;
 
-    if( 0 < array->size ) {
+    if( 0 < array->size )
+    {
         size_t i;
         
         pm->entries_count = array->size;
@@ -190,22 +202,26 @@ int process_webcfgparam( webcfgparam_t *pm,int num, ...)
 
         printf("The version in webcfg is %s\n",pm->version);
 
-        pm->entries = (param_t *) malloc( sizeof(param_t) * pm->entries_count );
-        if( NULL == pm->entries ) {
+        pm->entries = (wparam_t *) malloc( sizeof(wparam_t) * pm->entries_count );
+        if( NULL == pm->entries )
+        {
             pm->entries_count = 0;
             return -1;
         }
 
-        memset( pm->entries, 0, sizeof(param_t) * pm->entries_count );
+        memset( pm->entries, 0, sizeof(wparam_t) * pm->entries_count );
        
-        for( i = 0; i < pm->entries_count; i++ ) {
+        for( i = 0; i < pm->entries_count; i++ )
+        {
               printf("The array type is %d\n",array->ptr[i].type);
-            if( MSGPACK_OBJECT_MAP != array->ptr[i].type ) {
+            if( MSGPACK_OBJECT_MAP != array->ptr[i].type )
+            {
                 printf("Inside PM invalid");
                 errno = PM_INVALID_PM_OBJECT;
                 return -1;
             }
-            if( 0 != process_params(&pm->entries[i], &array->ptr[i].via.map) ) {
+            if( 0 != process_params(&pm->entries[i], &array->ptr[i].via.map) )
+            {
 		printf("process_params failed\n");
                 return -1;
             }

@@ -25,7 +25,8 @@ typedef struct
     char      *chaddr;     
 } macdoc_t;
 
-typedef struct {
+typedef struct
+{
     macdoc_t *entries;       
     size_t      entries_count;
 } macbindingdoc_t;

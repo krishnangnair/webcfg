@@ -53,12 +53,16 @@ void* helper_convert( const void *buf, size_t len,
 {
     void *p = malloc( struct_size );
 
-    if( NULL == p ) {
+    if( NULL == p )
+    {
         errno = HELPERS_OUT_OF_MEMORY;
-    } else {
+    }
+    else
+    {
         memset( p, 0, struct_size );
 
-        if( NULL != buf && 0 < len ) {
+        if( NULL != buf && 0 < len )
+        {
             size_t offset = 0;
             msgpack_unpacked msg;
             msgpack_unpack_return mp_rv;

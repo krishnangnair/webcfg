@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <CUnit/Basic.h>
 #include "../src/portmappingdoc.h"
-#include "../src/portmappingparam.h"
 #include "../src/portmappingpack.h"
 
 void portMappingPackUnpack();
@@ -41,7 +40,7 @@ int readFromFile(char *filename, char **data, int *len)
 {
 	FILE *fp;
 	int ch_count = 0;
-	fp = fopen(filename, "rb");
+	fp = fopen(filename, "r");
 	if (fp == NULL)
 	{
 		printf("Failed to open file %s\n", filename);
@@ -54,11 +53,11 @@ int readFromFile(char *filename, char **data, int *len)
 	
 	fread(*data, 1, ch_count,fp);
         //fgets(*data,400,fp);
-        //printf("........data is %s len%lu\n", *data, strlen(*data));
+        printf("........data is %s len%lu\n", *data, strlen(*data));
 	*len = ch_count;
 	(*data)[ch_count] ='\0';
-       // printf("character count is %d\n",ch_count);
-        //printf("data is %s len %lu\n", *data, strlen(*data));
+        printf("character count is %d\n",ch_count);
+        printf("data is %s len %lu\n", *data, strlen(*data));
 	fclose(fp);
 	return 1;
 }
@@ -88,7 +87,7 @@ int writeToFile(char *filename, char *data)
 
 void test_portmappingpack_unpack()
 {
-	subdoc_t *packSubdocData = NULL;
+/*	subdoc_t *packSubdocData = NULL;
         size_t subdocPackSize = -1;
         void *data = NULL;
         
@@ -124,7 +123,7 @@ void test_portmappingpack_unpack()
 	printf("subdocPackSize is %ld\n", subdocPackSize);
 	printf("data packed is %s\n", (char*)data);
         
-        portMappingPackUnpack(data);
+        portMappingPackUnpack(data);*/
 /*
 
 	int len=0;
@@ -148,10 +147,11 @@ void test_portmappingpack_unpack()
 
 }
 
-void portMappingPackUnpack(char *blob)
-//void portMappingPackUnpack()
-{
-   	data_t *packRootData = NULL;
+//void portMappingPackUnpack(char *blob)
+void portMappingPackUnpack()
+{  
+        //int err;
+   /*	data_t *packRootData = NULL;
 	size_t rootPackSize=-1;
 	void *data =NULL;
 	int err;
@@ -208,17 +208,56 @@ void portMappingPackUnpack(char *blob)
 				printf("pm->entries[0].value %s\n" , pm->entries[0].value);
 				printf("pm->entries[0].type %d\n", pm->entries[0].type);
 			//}
-
+*/
 			//decode inner blob
-		/*	portmappingdoc_t *rpm;
+			portmappingdoc_t *rpm;
+                        int len =0;//, i =0;
+		        char *binfileData = NULL;
+                        char subdocfile[64] = "decodeMsg.bin";
+                        msgpack_zone mempool;
+			msgpack_object deserialized;
+			msgpack_unpack_return unpack_ret;
+
 			printf("--------------decode blob-------------\n");
-			rpm = portmappingdoc_convert( pm->entries[0].value, strlen(pm->entries[0].value) );
-			printf("blob len %lu\n", strlen(pm->entries[0].value));
-			err = errno;
-			printf( "errno: %s\n", portmappingdoc_strerror(err) );
+                        readFromFile(subdocfile, &binfileData , &len);
+                //Start of msgpack decoding just to verify
+		printf("----Start of msgpack decoding----\n");
+		msgpack_zone_init(&mempool, 2048);
+		unpack_ret = msgpack_unpack(binfileData, len, NULL, &mempool, &deserialized);
+		printf("unpack_ret is %d\n",unpack_ret);
+		switch(unpack_ret)
+		{
+			case MSGPACK_UNPACK_SUCCESS:
+				printf("MSGPACK_UNPACK_SUCCESS :%d\n",unpack_ret);
+				printf("\nmsgpack decoded data is:");
+				msgpack_object_print(stdout, deserialized);
+			break;
+			case MSGPACK_UNPACK_EXTRA_BYTES:
+				printf("MSGPACK_UNPACK_EXTRA_BYTES :%d\n",unpack_ret);
+			break;
+			case MSGPACK_UNPACK_CONTINUE:
+				printf("MSGPACK_UNPACK_CONTINUE :%d\n",unpack_ret);
+			break;
+			case MSGPACK_UNPACK_PARSE_ERROR:
+				printf("MSGPACK_UNPACK_PARSE_ERROR :%d\n",unpack_ret);
+			break;
+			case MSGPACK_UNPACK_NOMEM_ERROR:
+				printf("MSGPACK_UNPACK_NOMEM_ERROR :%d\n",unpack_ret);
+			break;
+			default:
+				printf("Message Pack decode failed with error: %d\n", unpack_ret);
+		}
+
+		msgpack_zone_destroy(&mempool);
+		printf("----End of msgpack decoding----\n");
+			//rpm = portmappingdoc_convert( pm->entries[0].value, strlen(pm->entries[0].value) );
+                        rpm = portmappingdoc_convert( binfileData, len) ;
+			//printf("blob len %lu\n", strlen(pm->entries[0].value));
+			//err = errno;
+			//printf( "errno: %s\n", portmappingdoc_strerror(err) );
 			CU_ASSERT_FATAL( NULL != rpm );
 			CU_ASSERT_FATAL( NULL != rpm->entries );
-			//CU_ASSERT_FATAL( 4 == rpm->entries_count );*/
+			//CU_ASSERT_FATAL( 4 == rpm->entries_count );
 			
 /*
 			//first blob
@@ -242,7 +281,7 @@ void portMappingPackUnpack(char *blob)
 			CU_ASSERT_FATAL( 65535 == rpm->entries[3].version );
 
 */
-			/*for(i = 0; i < (int)rpm->entries_count ; i++)
+			for(int i = 0; i < (int)rpm->entries_count ; i++)
 			{
 				printf("rpm->entries[%d].InternalClient %s\n", i, rpm->entries[i].internal_client);
 				printf("rpm->entries[%d].ExternalPortEndRange %s\n" , i, rpm->entries[i].external_port_end_range);
@@ -252,11 +291,11 @@ void portMappingPackUnpack(char *blob)
 				printf("rpm->entries[%d].external_port %s\n", i, rpm->entries[i].external_port);
 			}
 
-			portmappingdoc_destroy( rpm );*/
-			portmapping_destroy( pm );
-		}
+			portmappingdoc_destroy( rpm );
+			//portmapping_destroy( pm );
+		//}
 
-	}
+	//}
 
 		
 }

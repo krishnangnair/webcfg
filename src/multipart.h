@@ -27,7 +27,8 @@ typedef struct
     char  *data;    
 } multipartdocs_t;
 
-typedef struct {
+typedef struct
+{
     multipartdocs_t *entries; 
     size_t   entries_count; 
     char *version;

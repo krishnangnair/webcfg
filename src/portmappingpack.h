@@ -98,6 +98,6 @@ ssize_t portmap_pack_subdoc(const subdoc_t *subdocData,void **data);
 ssize_t portmap_pack_rootdoc( char *blob, const data_t *packData, void **data );
 
 
-
+void b64_encoder(const void *buf,size_t len);
 
 #endif

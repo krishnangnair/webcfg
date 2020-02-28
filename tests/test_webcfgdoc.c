@@ -208,10 +208,12 @@ int main( int argc, char *argv[] )
     (void ) argc;
     (void ) argv;
     
-    if( CUE_SUCCESS == CU_initialize_registry() ) {
+    if( CUE_SUCCESS == CU_initialize_registry() )
+    {
         add_suites( &suite );
 
-        if( NULL != suite ) {
+        if( NULL != suite )
+        {
             CU_basic_set_mode( CU_BRM_VERBOSE );
             CU_basic_run_tests();
             printf( "\n" );

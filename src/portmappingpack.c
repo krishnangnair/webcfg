@@ -15,6 +15,7 @@
  */
 #include <errno.h>
 #include <string.h>
+#include <base64.h>
 #include <msgpack.h>
 
 #include "helpers.h"
@@ -66,11 +67,15 @@ static void __msgpack_pack_string_nvp( msgpack_packer *pk,
                                        const struct portmapping_token *token,
                                        const char *val )
 {
-    if( ( NULL != token ) && ( NULL != val ) ) {
+    if( ( NULL != token ) && ( NULL != val ) )
+    {
         __msgpack_pack_string( pk, token->name, token->length );
         __msgpack_pack_string( pk, val, strlen( val ) );
     }
 }
+
+void b64_encoder(const void *buf,size_t len);
+int writeToFile_b64(char *filename, char *data, int len);
 
 ssize_t portmap_pack_appenddoc(const appenddoc_t *appenddocData,void **data)
 {
@@ -308,6 +313,102 @@ ssize_t portmap_pack_rootdoc( char *blob, const data_t *packData, void **data )
     msgpack_zone_destroy(&mempool);
     msgpack_sbuffer_destroy( &sbuf );
     return rv;
+}
+
+void b64_encoder(const void *buf,size_t len)
+{
+        char* b64buffer =  NULL;
+	size_t encodeSize = 0;
+        size_t size =0;
+	char * decodeMsg =NULL;
+	size_t decodeMsgSize =0;
+
+       //uncomment to verify the decodeMsg
+       /*
+        msgpack_zone mempool;
+	msgpack_object deserialized;
+	msgpack_unpack_return unpack_ret;*/
+
+	printf("-----------Start of Base64 Encode ------------\n");
+	encodeSize = b64_get_encoded_buffer_size( len );
+	printf("encodeSize is %ld\n", encodeSize);
+	b64buffer = malloc(encodeSize+1);
+	b64_encode((const uint8_t *)buf, len, (uint8_t *)b64buffer);
+	b64buffer[encodeSize] = '\0' ;
+	printf("---------- End of Base64 Encode -------------\n");
+
+	//printf("Final Encoded data: %s\n",b64buffer);
+	printf("Final Encoded data length: %ld\n",strlen(b64buffer));
+	/*********** base64 encode *****************/
+
+	//Start of b64 decoding
+	printf("----Start of b64 decoding----\n");
+	decodeMsgSize = b64_get_decoded_buffer_size(strlen(b64buffer));
+	printf("expected b64 decoded msg size : %ld bytes\n",decodeMsgSize);
+
+	decodeMsg = (char *) malloc(sizeof(char) * decodeMsgSize);
+
+	size = b64_decode( (const uint8_t *)b64buffer, strlen(b64buffer), (uint8_t *)decodeMsg );
+	printf("base64 decoded data containing %ld bytes is :%s\n",size, decodeMsg);
+
+	printf("----End of b64 decoding----\n");
+
+        writeToFile_b64("decodeMsg.bin", decodeMsg, (int)size);
+	//End of b64 decoding
+
+	//Start of msgpack decoding just to verify
+	/*printf("----Start of msgpack decoding----\n");
+	msgpack_zone_init(&mempool, 2048);
+	unpack_ret = msgpack_unpack(decodeMsg, size, NULL, &mempool, &deserialized);
+	printf("unpack_ret is %d\n",unpack_ret);
+	switch(unpack_ret)
+	{
+		case MSGPACK_UNPACK_SUCCESS:
+			printf("MSGPACK_UNPACK_SUCCESS :%d\n",unpack_ret);
+			printf("\nmsgpack decoded data is:");
+			msgpack_object_print(stdout, deserialized);
+		break;
+		case MSGPACK_UNPACK_EXTRA_BYTES:
+			printf("MSGPACK_UNPACK_EXTRA_BYTES :%d\n",unpack_ret);
+		break;
+		case MSGPACK_UNPACK_CONTINUE:
+			printf("MSGPACK_UNPACK_CONTINUE :%d\n",unpack_ret);
+		break;
+		case MSGPACK_UNPACK_PARSE_ERROR:
+			printf("MSGPACK_UNPACK_PARSE_ERROR :%d\n",unpack_ret);
+		break;
+		case MSGPACK_UNPACK_NOMEM_ERROR:
+			printf("MSGPACK_UNPACK_NOMEM_ERROR :%d\n",unpack_ret);
+		break;
+		default:
+			printf("Message Pack decode failed with error: %d\n", unpack_ret);
+	}
+
+	msgpack_zone_destroy(&mempool);
+	printf("----End of msgpack decoding----\n");*/
+
+}
+
+int writeToFile_b64(char *filename, char *data, int len)
+{
+	FILE *fp;
+	fp = fopen(filename , "w+");
+	if (fp == NULL)
+	{
+		printf("Failed to open file %s\n", filename );
+		return 0;
+	}
+	if(data !=NULL)
+	{
+		fwrite(data, len, 1, fp);
+		fclose(fp);
+		return 1;
+	}
+	else
+	{
+		printf("WriteToFile failed, Data is NULL\n");
+		return 0;
+	}
 }
 
 

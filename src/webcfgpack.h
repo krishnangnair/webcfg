@@ -27,13 +27,15 @@
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
-struct data {
+struct data
+{
     char *name;
     char *value;
     uint16_t type;
 };
 
-typedef struct data_struct {
+typedef struct data_struct
+{
     size_t count;
     struct data *data_items;
 } data_t;

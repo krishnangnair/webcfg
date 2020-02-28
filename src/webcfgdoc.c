@@ -122,33 +122,30 @@ int process_docparams( doc_t *e, msgpack_object_map *map )
     msgpack_object_kv *p;
 
     p = map->ptr;
-    while( (0 < objects_left) && (0 < left--) ) {
-        if( MSGPACK_OBJECT_STR == p->key.type ) {
-            if( MSGPACK_OBJECT_POSITIVE_INTEGER == p->val.type ) {
-                if( 0 == match(p, "version") ) {
+    while( (0 < objects_left) && (0 < left--) )
+    {
+        if( MSGPACK_OBJECT_STR == p->key.type )
+        {
+            if( MSGPACK_OBJECT_POSITIVE_INTEGER == p->val.type )
+            {
+                if( 0 == match(p, "version") )
+                {
                     if( UINT16_MAX < p->val.via.u64 ) {
-			//printf("e->version is %d\n", e->version);
                         errno = PM_INVALID_VERSION;
                         return -1;
                     } else {
                         e->version = (uint16_t) p->val.via.u64;
-			//printf("e->version is %d\n", e->version);
                     }
                     objects_left &= ~(1 << 0);
-		    //printf("objects_left after version %d\n", objects_left);
                 }
             } else if( MSGPACK_OBJECT_STR == p->val.type ) {
                 if( 0 == match(p, "name") ) {
                     e->name = strndup( p->val.via.str.ptr, p->val.via.str.size );
-		    //printf("e->name is %s\n", e->name);
                     objects_left &= ~(1 << 1);
-		    //printf("objects_left after name %d\n", objects_left);
                 }
 		if( 0 == match(p, "url") ) {
                     e->url = strndup( p->val.via.str.ptr, p->val.via.str.size );
-		    //printf("e->url is %s\n", e->url);
                     objects_left &= ~(1 << 2);
-		    //printf("objects_left after url %d\n", objects_left);
                 }
 	
             }
@@ -166,23 +163,28 @@ int process_docparams( doc_t *e, msgpack_object_map *map )
 int process_webcfgdoc( webcfgdoc_t *pm, msgpack_object *obj )
 {
     msgpack_object_array *array = &obj->via.array;
-    if( 0 < array->size ) {
+    if( 0 < array->size )
+    {
         size_t i;
 
         pm->entries_count = array->size;
         pm->entries = (doc_t *) malloc( sizeof(doc_t) * pm->entries_count );
-        if( NULL == pm->entries ) {
-            pm->entries_count = 0;
-            return -1;
+        if( NULL == pm->entries )
+        {
+          pm->entries_count = 0;
+          return -1;
         }
 
         memset( pm->entries, 0, sizeof(doc_t) * pm->entries_count );
-        for( i = 0; i < pm->entries_count; i++ ) {
-            if( MSGPACK_OBJECT_MAP != array->ptr[i].type ) {
+        for( i = 0; i < pm->entries_count; i++ )
+        {
+            if( MSGPACK_OBJECT_MAP != array->ptr[i].type )
+            {
                 errno = PM_INVALID_PM_OBJECT;
                 return -1;
             }
-            if( 0 != process_docparams(&pm->entries[i], &array->ptr[i].via.map) ) {
+            if( 0 != process_docparams(&pm->entries[i], &array->ptr[i].via.map) )
+            {
 		printf("process_docparams failed\n");
                 return -1;
             }
