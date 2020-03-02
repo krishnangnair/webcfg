@@ -20,7 +20,7 @@
 #include <CUnit/Basic.h>
 #include "../src/webcfgdoc.h"
 #include "../src/webcfgparam.h"
-#include "../src/webcfgpack.h"
+#include "../src/webcfgencoder.h"
 
 void webcfgPackUnpack();
 /*

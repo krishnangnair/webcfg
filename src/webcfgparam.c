@@ -46,7 +46,6 @@ enum {
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
 int process_params( wparam_t *e, msgpack_object_map *map );
-//int process_webcfgparam( webcfgparam_t *pm, msgpack_object *obj );
 int process_webcfgparam( webcfgparam_t *pm,int num, ...);
 
 /*----------------------------------------------------------------------------*/
@@ -194,13 +193,8 @@ int process_webcfgparam( webcfgparam_t *pm,int num, ...)
         size_t i;
         
         pm->entries_count = array->size;
-
-        msgpack_object *obj1 = va_arg(valist, msgpack_object *);
-        pm->version = strndup(obj1->via.str.ptr,obj1->via.str.size);
        
         va_end(valist);
-
-        printf("The version in webcfg is %s\n",pm->version);
 
         pm->entries = (wparam_t *) malloc( sizeof(wparam_t) * pm->entries_count );
         if( NULL == pm->entries )

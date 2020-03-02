@@ -24,7 +24,7 @@
 #include "../src/helpers.h"
 #include "../src/macbindingdoc.h"
 #include "../src/portmappingdoc.h"
-#include "../src/portmappingpack.h"
+#include "../src/portmappingencoder.h"
 #include <msgpack.h>
 #include <curl/curl.h>
 #include <base64.h>
@@ -154,8 +154,8 @@ void test_multipart()
 		printf( "errno: %s\n", webcfgparam_strerror(err) );
 		CU_ASSERT_FATAL( NULL != pm );
 		CU_ASSERT_FATAL( NULL != pm->entries );
-                CU_ASSERT_FATAL( NULL != pm->version );
-                printf("pm->version is %s\n",pm->version);
+                //CU_ASSERT_FATAL( NULL != pm->version );
+               // printf("pm->version is %d\n",pm->version);
 		for(i = 0; i < (int)pm->entries_count ; i++)
 		{
 			printf("pm->entries[%d].name %s\n", i, pm->entries[i].name);

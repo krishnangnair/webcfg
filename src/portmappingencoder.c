@@ -19,7 +19,7 @@
 #include <msgpack.h>
 
 #include "helpers.h"
-#include "portmappingpack.h"
+#include "portmappingencoder.h"
 
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
@@ -95,16 +95,18 @@ ssize_t portmap_pack_appenddoc(const appenddoc_t *appenddocData,void **data)
              
         APPENDDOC_MAP_VERSION.name = "version";
         APPENDDOC_MAP_VERSION.length = strlen( "version" );
-        __msgpack_pack_string_nvp( &pk, &APPENDDOC_MAP_VERSION, appenddocData->version );
+        __msgpack_pack_string( &pk, APPENDDOC_MAP_VERSION.name, APPENDDOC_MAP_VERSION.length );
+        msgpack_pack_int(&pk,appenddocData->version);
 
         struct portmapping_token APPENDDOC_MAP_TRANSACTION_ID;
              
         APPENDDOC_MAP_TRANSACTION_ID.name = "transaction_id";
         APPENDDOC_MAP_TRANSACTION_ID.length = strlen( "transaction_id" );
-        __msgpack_pack_string_nvp( &pk, &APPENDDOC_MAP_TRANSACTION_ID, appenddocData->transaction_id );
+        __msgpack_pack_string( &pk, APPENDDOC_MAP_TRANSACTION_ID.name, APPENDDOC_MAP_TRANSACTION_ID.length );
+        msgpack_pack_int(&pk, appenddocData->transaction_id);
     }
     else 
-    {
+    {    
         printf("parameters is NULL\n" );
         return rv;
     } 
@@ -152,8 +154,8 @@ ssize_t portmap_pack_subdoc(const subdoc_t *subdocData,void **data)
 
         struct portmapping_token SUBDOC_MAP_PORTMAPPING;
      
-        SUBDOC_MAP_PORTMAPPING.name = "portmapping";
-        SUBDOC_MAP_PORTMAPPING.length = strlen( "portmapping" );
+        SUBDOC_MAP_PORTMAPPING.name = "portforwarding";
+        SUBDOC_MAP_PORTMAPPING.length = strlen( "portforwarding" );
         __msgpack_pack_string( &pk, SUBDOC_MAP_PORTMAPPING.name, SUBDOC_MAP_PORTMAPPING.length );
         
         msgpack_pack_array( &pk, count );
@@ -172,8 +174,7 @@ ssize_t portmap_pack_subdoc(const subdoc_t *subdocData,void **data)
              
              SUBDOC_MAP_EXTERNALPORTENDRANGE.name = "ExternalPortEndRange";
              SUBDOC_MAP_EXTERNALPORTENDRANGE.length = strlen( "ExternalPortEndRange" );
-             __msgpack_pack_string( &pk, SUBDOC_MAP_EXTERNALPORTENDRANGE.name, SUBDOC_MAP_EXTERNALPORTENDRANGE.length );
-	     msgpack_pack_int(&pk, subdocData->subdoc_items[i].external_port_end_range );
+             __msgpack_pack_string_nvp( &pk, &SUBDOC_MAP_EXTERNALPORTENDRANGE, subdocData->subdoc_items[i].external_port_end_range );
 
              struct portmapping_token SUBDOC_MAP_ENABLE;
              
@@ -201,8 +202,7 @@ ssize_t portmap_pack_subdoc(const subdoc_t *subdocData,void **data)
              
              SUBDOC_MAP_EXTERNALPORT.name = "ExternalPort";
              SUBDOC_MAP_EXTERNALPORT.length = strlen( "ExternalPort" );
-             __msgpack_pack_string( &pk, SUBDOC_MAP_EXTERNALPORT.name, SUBDOC_MAP_EXTERNALPORT.length );
-	     msgpack_pack_int(&pk, subdocData->subdoc_items[i].external_port);
+             __msgpack_pack_string_nvp( &pk, &SUBDOC_MAP_EXTERNALPORT, subdocData->subdoc_items[i].external_port );
 
        }
          
@@ -285,7 +285,8 @@ ssize_t portmap_pack_rootdoc( char *blob, const data_t *packData, void **data )
 
         PORTMAPPING_MAP_VERSION.name = "version";
         PORTMAPPING_MAP_VERSION.length = strlen( "version" );
-	__msgpack_pack_string_nvp( &pk, &PORTMAPPING_MAP_VERSION, "154363892090392891829182011" );
+	__msgpack_pack_string( &pk, PORTMAPPING_MAP_VERSION.name, PORTMAPPING_MAP_VERSION.length );
+        msgpack_pack_int(&pk, 54563 );
        
         
 
@@ -324,10 +325,10 @@ void b64_encoder(const void *buf,size_t len)
 	size_t decodeMsgSize =0;
 
        //uncomment to verify the decodeMsg
-       /*
+       
         msgpack_zone mempool;
 	msgpack_object deserialized;
-	msgpack_unpack_return unpack_ret;*/
+	msgpack_unpack_return unpack_ret;
 
 	printf("-----------Start of Base64 Encode ------------\n");
 	encodeSize = b64_get_encoded_buffer_size( len );
@@ -357,7 +358,7 @@ void b64_encoder(const void *buf,size_t len)
 	//End of b64 decoding
 
 	//Start of msgpack decoding just to verify
-	/*printf("----Start of msgpack decoding----\n");
+	printf("----Start of msgpack decoding----\n");
 	msgpack_zone_init(&mempool, 2048);
 	unpack_ret = msgpack_unpack(decodeMsg, size, NULL, &mempool, &deserialized);
 	printf("unpack_ret is %d\n",unpack_ret);
@@ -385,7 +386,7 @@ void b64_encoder(const void *buf,size_t len)
 	}
 
 	msgpack_zone_destroy(&mempool);
-	printf("----End of msgpack decoding----\n");*/
+	printf("----End of msgpack decoding----\n");
 
 }
 
@@ -415,4 +416,5 @@ int writeToFile_b64(char *filename, char *data, int len)
 
 
 
-
+ 
+    

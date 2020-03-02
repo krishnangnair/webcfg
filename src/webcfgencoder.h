@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __PORTMAPPINGPACK_H__
-#define __PORTMAPPINGPACK_H__
+#ifndef __WEBCFGENCODER_H__
+#define __WEBCFGENCODER_H__
 
 #include <stdint.h>
-#include <stdbool.h>
 
 
 /*----------------------------------------------------------------------------*/
@@ -28,76 +27,33 @@
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
-struct rootdata {
+struct data
+{
     char *name;
     char *value;
     uint16_t type;
 };
 
-typedef struct data_struct {
+typedef struct data_struct
+{
     size_t count;
-    struct rootdata *data_items;
-    char * version;
+    struct data *data_items;
 } data_t;
-
-//for subdoc
-
-struct subdoc {
-    char      *internal_client; 
-    bool      enable;       
-    uint16_t  external_port_end_range;    
-    char      *protocol;
-    char      *description;
-    uint16_t  external_port; 
-};
-
-typedef struct subdoc_struct {
-    size_t count;
-    struct subdoc *subdoc_items;
-} subdoc_t;
-
-//for doc append
-typedef struct appenddoc_struct{
-    char * version;
-    char * transaction_id;
-    size_t *count;
-}appenddoc_t;
 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
 
 /**
- *  Packs portmapping append config doc.
+ *  Packs webconfig root config doc.
  *
  *  @param 
  *
  *  @return 0 if the operation was a success, error otherwise
  */
-
-ssize_t portmap_pack_appenddoc(const appenddoc_t *appenddocData,void **data);
-
-/**
- *  Packs portmapping sub config doc.
- *
- *  @param 
- *
- *  @return 0 if the operation was a success, error otherwise
- */
-
-ssize_t portmap_pack_subdoc(const subdoc_t *subdocData,void **data);
-
-/**
- *  Packs portmapping root config doc.
- *
- *  @param 
- *
- *  @return 0 if the operation was a success, error otherwise
- */
-
-ssize_t portmap_pack_rootdoc( char *blob, const data_t *packData, void **data );
+ssize_t webcfg_pack_rootdoc( char *blob, const data_t *packData, void **data );
 
 
-void b64_encoder(const void *buf,size_t len);
+
 
 #endif

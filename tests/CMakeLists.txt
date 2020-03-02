@@ -28,8 +28,8 @@ link_directories ( ${LIBRARY_DIR} )
 #   test_portmapping
 #-------------------------------------------------------------------------------
 add_test(NAME test_portmapping COMMAND ${MEMORY_CHECK} ./test_portmapping)
-add_executable(test_portmapping test_portmapping.c ../src/portmappingdoc.c ../src/portmappingpack.c ../src/helpers.c ../src/webcfgparam.c ../src/array_helpers.c)
-target_link_libraries (test_portmapping -lcunit -lmsgpackc -ltrower-base64)
+add_executable(test_portmapping test_portmapping.c ../src/multipart.c ../src/portmappingdoc.c ../src/portmappingencoder.c ../src/helpers.c ../src/webcfgparam.c ../src/array_helpers.c)
+target_link_libraries (test_portmapping -lcunit -lcurl -lmsgpackc -ltrower-base64)
 
 target_link_libraries (test_portmapping gcov -Wl,--no-as-needed )
 
@@ -37,7 +37,7 @@ target_link_libraries (test_portmapping gcov -Wl,--no-as-needed )
 #   test_portmapping_decode
 #-------------------------------------------------------------------------------
 add_test(NAME test_portmapping_decode COMMAND ${MEMORY_CHECK} ./test_portmapping_decode)
-add_executable(test_portmapping_decode test_portmapping_decode.c ../src/portmappingdoc.c ../src/portmappingpack.c ../src/helpers.c ../src/webcfgparam.c ../src/array_helpers.c)
+add_executable(test_portmapping_decode test_portmapping_decode.c ../src/portmappingdoc.c ../src/portmappingencoder.c ../src/helpers.c ../src/webcfgparam.c ../src/array_helpers.c)
 target_link_libraries (test_portmapping_decode -lcunit -lmsgpackc -ltrower-base64)
 
 target_link_libraries (test_portmapping_decode gcov -Wl,--no-as-needed )
@@ -64,7 +64,7 @@ target_link_libraries (test_webcfgdoc gcov -Wl,--no-as-needed )
 #   test_webcfgpack
 #-------------------------------------------------------------------------------
 add_test(NAME test_webcfgpack COMMAND ${MEMORY_CHECK} ./test_webcfgpack)
-add_executable(test_webcfgpack test_webcfgpack.c ../src/webcfgdoc.c ../src/webcfgparam.c ../src/webcfgpack.c ../src/helpers.c ../src/array_helpers.c )
+add_executable(test_webcfgpack test_webcfgpack.c ../src/webcfgdoc.c ../src/webcfgparam.c ../src/webcfgencoder.c ../src/helpers.c ../src/array_helpers.c )
 target_link_libraries (test_webcfgpack -lcunit -lmsgpackc)
 
 target_link_libraries (test_webcfgpack gcov -Wl,--no-as-needed )
@@ -73,7 +73,7 @@ target_link_libraries (test_webcfgpack gcov -Wl,--no-as-needed )
 #   test_multipart
 #-------------------------------------------------------------------------------
 add_test(NAME test_multipart COMMAND ${MEMORY_CHECK} ./test_multipart)
-add_executable(test_multipart test_multipart.c ../src/webcfgdoc.c ../src/webcfgparam.c ../src/multipart.c ../src/helpers.c ../src/array_helpers.c ../src/helpers.c ../src/portmappingdoc.c ../src/portmappingpack.c ../src/macbindingdoc.c)
+add_executable(test_multipart test_multipart.c ../src/webcfgdoc.c ../src/webcfgparam.c ../src/multipart.c ../src/helpers.c ../src/array_helpers.c ../src/helpers.c ../src/portmappingdoc.c ../src/portmappingencoder.c ../src/macbindingdoc.c)
 target_link_libraries (test_multipart -lcunit -lmsgpackc -lcurl -luuid -ltrower-base64)
 
 target_link_libraries (test_multipart gcov -Wl,--no-as-needed )

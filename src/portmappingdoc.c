@@ -144,7 +144,7 @@ int process_portdocparams( portdoc_t *e, msgpack_object_map *map )
     msgpack_object_kv *p;
 
     p = map->ptr;
-    //printf("map size:%d\n",left);
+    printf("map size:%d\n",left);
     while( (0 < objects_left) && (0 < left--) )
     {
         if( MSGPACK_OBJECT_STR == p->key.type )
@@ -220,15 +220,15 @@ int process_portmappingdoc( portmappingdoc_t *pm,int num, ... )
         pm->entries_count = array->size;
        
         msgpack_object *obj1 = va_arg(valist, msgpack_object *);
-        pm->version = strndup(obj1->via.str.ptr,obj1->via.str.size);
+        pm->version = (uint32_t) obj1->via.u64;
 
         msgpack_object *obj2 = va_arg(valist, msgpack_object *);
-        pm->transaction_id = strndup(obj2->via.str.ptr,obj2->via.str.size);
+        pm->transaction_id = (uint16_t) obj2->via.u64;
 
         va_end(valist);
 
-        printf("pm->version in blob is %s\n",pm->version);
-        printf("pm->transaction_id in blob is %s\n",pm->transaction_id);
+        printf("pm->version in blob is %ld\n",(long)pm->version);
+        printf("pm->transaction_id in blob is %d\n",pm->transaction_id);
 
         pm->entries = (portdoc_t *) malloc( sizeof(portdoc_t) * pm->entries_count );
 
@@ -255,6 +255,7 @@ int process_portmappingdoc( portmappingdoc_t *pm,int num, ... )
 		printf("process_portdocparams failed\n");
                 return -1;
             }
+           
         }
     }
 

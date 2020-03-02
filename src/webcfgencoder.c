@@ -18,7 +18,7 @@
 #include <msgpack.h>
 
 #include "helpers.h"
-#include "webcfgpack.h"
+#include "webcfgencoder.h"
 
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */

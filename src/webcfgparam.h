@@ -31,7 +31,6 @@ typedef struct
 {
     wparam_t *entries;
     size_t      entries_count;
-    char * version;
 } webcfgparam_t;
 
 /**

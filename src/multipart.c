@@ -18,7 +18,7 @@
 #include "webcfgdoc.h"
 #include "webcfgparam.h"
 #include "portmappingdoc.h"
-#include "portmappingpack.h"
+#include "portmappingencoder.h"
 #include <uuid/uuid.h>
 #include <string.h>
 #include <stdlib.h>
@@ -298,7 +298,7 @@ int webcfg_http_request(char *webConfigURL, char **configData, int r_count, long
 			for(size_t m = 0 ; m<(mp->entries_count-1); m++)
 			{
 				printf("mp->entries[%ld].name_space %s\n", m, mp->entries[m].name_space);
-				printf("mp->entries[%ld].etag %s\n" ,m,  mp->entries[m].etag);
+				printf("mp->entries[%ld].etag %ld\n" ,m,  (long)mp->entries[m].etag);
 				printf("mp->entries[%ld].data %s\n" ,m,  mp->entries[m].data);
 
 				printf("subdocbytes is %d\n", subdocbytes);
@@ -337,8 +337,8 @@ int webcfg_http_request(char *webConfigURL, char **configData, int r_count, long
                         {   
                             memset(appenddata, 0, sizeof(appenddoc_t));
  
-                            appenddata->version = strdup ("317121678814655279314109643824485720986");
-                            appenddata->transaction_id = strdup("portforwarding-1");
+                            appenddata->version = mp->entries[0].etag;
+                            appenddata->transaction_id = 1001;
                         }
 
                         printf("Append Doc \n");
@@ -635,16 +635,18 @@ void parse_multipart(char *ptr, int no_of_bytes, multipartdocs_t *m, int *no_of_
 {
 	void * mulsubdoc;
 
+        printf("The pointer is %s\n",ptr);
 	/*for storing respective values */
         if(0 == strncasecmp(ptr,"Namespace",strlen("Namespace")-1))
         {
              m->name_space = strndup(ptr+(strlen("Namespace: ")),no_of_bytes-((strlen("Namespace: "))));
-             //printf("The Namespace is %s\n",m->name_space);
+             printf("The Namespace is %s\n",m->name_space);
         }
         else if(0 == strncasecmp(ptr,"Etag",strlen("Etag")-1))
         {
-             m->etag = strndup(ptr+(strlen("Etag: ")),no_of_bytes-((strlen("Etag: "))));
-            //printf("The Etag is %s\n",m->etag);
+             char * temp = strndup(ptr+(strlen("Etag: ")),no_of_bytes-((strlen("Etag: "))));
+             m->etag = strtoul(temp,0,0);
+             printf("The Etag is %lu\n",(long)m->etag);
         }
         else if(strstr(ptr,"parameters"))
         {

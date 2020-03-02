@@ -80,12 +80,11 @@ void* helper_convert( const void *buf, size_t len,
                 (MSGPACK_OBJECT_MAP == msg.data.type) )
             {
                 msgpack_object *inner;
-                msgpack_object *root_version;
+               // msgpack_object *root_version;
                 msgpack_object *blob_version;
                 msgpack_object *transaction_id;
 
                 inner = &msg.data;
-                root_version = &msg.data;
                 blob_version = &msg.data;
                 transaction_id = &msg.data;
                 
@@ -93,11 +92,9 @@ void* helper_convert( const void *buf, size_t len,
                 if( NULL != wrapper && 0 == strncmp(wrapper,"parameters",strlen("parameters"))) 
                 {
                     inner = __finder( wrapper, expect_type, &msg.data.via.map );
-                    root_version =  __finder( "version", expect_type, &msg.data.via.map );
                     
-                    printf("root_version is %ld\n", (size_t)root_version);
 
-                    if( ((NULL != inner) && (0 == (process)(p, 2, inner, root_version))) || 
+                    if( ((NULL != inner) && (0 == (process)(p, 1, inner))) ||
                               ((true == optional) && (NULL == inner)) )
                     {
                          msgpack_unpacked_destroy( &msg );
@@ -124,11 +121,11 @@ void* helper_convert( const void *buf, size_t len,
                     {
                          msgpack_unpacked_destroy( &msg );
                          errno = HELPERS_OK;
-
                          return p;
                     }
                     else 
-                    {
+                    {     
+                         printf("Invalid first element\n");
                          errno = HELPERS_INVALID_FIRST_ELEMENT;
                     }
                 } 
@@ -156,7 +153,7 @@ msgpack_object* __finder( const char *name,
 {
     uint32_t i;
     
-   // printf("The Map_size is %d\n",map->size);
+   printf("The Map_size is %d\n",map->size);
     for( i = 0; i < map->size; i++ ) 
     {
         if( MSGPACK_OBJECT_STR == map->ptr[i].key.type ) 
@@ -171,6 +168,14 @@ msgpack_object* __finder( const char *name,
                 }
             }
             else if(MSGPACK_OBJECT_STR == map->ptr[i].val.type)
+            {   
+                if(0 == strncmp(map->ptr[i].key.via.str.ptr, name, strlen(name)))
+                {   
+                    return &map->ptr[i].val;
+                }
+                
+             }
+             else 
             {   
                 if(0 == strncmp(map->ptr[i].key.via.str.ptr, name, strlen(name)))
                 {   

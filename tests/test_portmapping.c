@@ -19,7 +19,9 @@
 #include <stdio.h>
 #include <CUnit/Basic.h>
 #include "../src/portmappingdoc.h"
-#include "../src/portmappingpack.h"
+#include "../src/portmappingencoder.h"
+#include "../src/webcfgparam.h"
+#include "../src/multipart.h"
 
 void portMappingPackUnpack();
 /*
@@ -36,7 +38,7 @@ void portMappingPackUnpack();
 	[{'InternalClient': '10.0.0.196', 'ExternalPortEndRange': '7777', 'Enable': 'true', 'Protocol': 'BOTH', 'Description': 'SI-7777-7777-10.0.0.196', 'ExternalPort': '7777'}, {'InternalClient': '10.0.0.196', 'ExternalPortEndRange': '8389', 'Enable': 'true', 'Protocol': 'BOTH', 'Description': 'SI-8389-8389-10.0.0.196', 'ExternalPort': '8389'}]
 */
 
-int readFromFile(char *filename, char **data, int *len)
+int readFromFile1(char *filename, char **data, int *len)
 {
 	FILE *fp;
 	int ch_count = 0;
@@ -62,7 +64,7 @@ int readFromFile(char *filename, char **data, int *len)
 	return 1;
 }
 
-int writeToFile(char *filename, char *data)
+int writeToFile1(char *filename, char *data)
 {
 	FILE *fp;
 	fp = fopen(filename , "w+");
@@ -87,7 +89,7 @@ int writeToFile(char *filename, char *data)
 
 void test_portmappingpack_unpack()
 {
-/*	subdoc_t *packSubdocData = NULL;
+	subdoc_t *packSubdocData = NULL;
         size_t subdocPackSize = -1;
         void *data = NULL;
         
@@ -101,19 +103,19 @@ void test_portmappingpack_unpack()
             packSubdocData->subdoc_items = (struct subdoc *) malloc( sizeof(struct subdoc) * packSubdocData->count );
             memset( packSubdocData->subdoc_items, 0, sizeof(struct subdoc) * packSubdocData->count);
 
-            packSubdocData->subdoc_items[0].internal_client = strdup("10.0.0.196");
+            packSubdocData->subdoc_items[0].internal_client ="10.0.0.196";
             packSubdocData->subdoc_items[0].enable = "true";
-            packSubdocData->subdoc_items[0].external_port_end_range = 7777;
+            packSubdocData->subdoc_items[0].external_port_end_range = "7777";
             packSubdocData->subdoc_items[0].protocol = "BOTH";        
             packSubdocData->subdoc_items[0].description = "SI-7777-7777-10.0.0.196";        
-            packSubdocData->subdoc_items[0].external_port = 7777; 
+            packSubdocData->subdoc_items[0].external_port = "7777"; 
 
-            packSubdocData->subdoc_items[1].internal_client = strdup("10.0.0.196");
+            packSubdocData->subdoc_items[1].internal_client = "10.0.0.196";
             packSubdocData->subdoc_items[1].enable = "true";
-            packSubdocData->subdoc_items[1].external_port_end_range = 8389;
+            packSubdocData->subdoc_items[1].external_port_end_range = "8389";
             packSubdocData->subdoc_items[1].protocol = "BOTH";        
             packSubdocData->subdoc_items[1].description = "SI-8389-8389-10.0.0.196";        
-            packSubdocData->subdoc_items[1].external_port = 8389;                
+            packSubdocData->subdoc_items[1].external_port = "8389";                
 
             
         }
@@ -123,7 +125,7 @@ void test_portmappingpack_unpack()
 	printf("subdocPackSize is %ld\n", subdocPackSize);
 	printf("data packed is %s\n", (char*)data);
         
-        portMappingPackUnpack(data);*/
+        portMappingPackUnpack(data);
 /*
 
 	int len=0;
@@ -143,15 +145,14 @@ void test_portmappingpack_unpack()
 
 		portMappingPackUnpack(blobbuff);
 	} */
-   portMappingPackUnpack();
+   //portMappingPackUnpack();
 
 }
 
-//void portMappingPackUnpack(char *blob)
-void portMappingPackUnpack()
+void portMappingPackUnpack(char *blob)
+//void portMappingPackUnpack()
 {  
-        //int err;
-   /*	data_t *packRootData = NULL;
+   	data_t *packRootData = NULL;
 	size_t rootPackSize=-1;
 	void *data =NULL;
 	int err;
@@ -162,7 +163,7 @@ void portMappingPackUnpack()
 		memset(packRootData, 0, sizeof(data_t));
 
 		packRootData->count = 1;
-                packRootData->version = strdup("70984884608473595535252890235591967179");
+                //packRootData->version = strdup("70984884608473595535252890235591967179");
 		packRootData->data_items = (struct rootdata *) malloc( sizeof(struct rootdata) * packRootData->count );
 		memset( packRootData->data_items, 0, sizeof(struct rootdata) * packRootData->count );
 
@@ -175,16 +176,16 @@ void portMappingPackUnpack()
 	printf("rootPackSize is %ld\n", rootPackSize);
 	printf("data packed is %s\n", (char*)data); 
         
-	int status = writeToFile("buff.bin", (char*)data);
+	int status = writeToFile1("buff.bin", (char*)data);
         //int status = writeToFile("buff.bin", (char*)blob);
 	if(status)
 	{
-		portmapping_t *pm;
+		webcfgparam_t *pm;
 		int len =0;//, i =0;
 		void* rootbuff;
 		char *binfileData = NULL;
 
-		int status = readFromFile("buff.bin", &binfileData , &len);
+		int status = readFromFile1("buff.bin", &binfileData , &len);
 	
 		if(status)
 		{
@@ -192,9 +193,9 @@ void portMappingPackUnpack()
 
 			//decode root doc
 			printf("--------------decode root doc-------------\n");
-			pm = portmapping_convert( rootbuff, len+1 );
+			pm = webcfgparam_convert( rootbuff, len+1 );
 			err = errno;
-			printf( "errno: %s\n", portmapping_strerror(err) );
+			printf( "errno: %s\n", webcfgparam_strerror(err) );
 			//CU_ASSERT_FATAL( NULL != pm );
 			//CU_ASSERT_FATAL( NULL != pm->entries );
 			CU_ASSERT_FATAL( 1 == pm->entries_count );
@@ -207,10 +208,46 @@ void portMappingPackUnpack()
 				printf("pm->entries[0].name %s\n",  pm->entries[0].name);
 				printf("pm->entries[0].value %s\n" , pm->entries[0].value);
 				printf("pm->entries[0].type %d\n", pm->entries[0].type);
+                               // printf("pm->version %d\n",  pm->version);
 			//}
-*/
+                        //Appending docs
+                        printf("\n-----------------------------Appenddocs---------------------------\n");
+                        appenddoc_t *appenddata = NULL;
+                        size_t appenddocPackSize = -1;
+                        size_t embeddeddocPackSize = -1;
+                        void *appenddocdata = NULL;
+                        void *embeddeddocdata = NULL;
+ 
+                        msgpack_zone mempool;
+			msgpack_object deserialized;
+			msgpack_unpack_return unpack_ret;
+
+                        appenddata = (appenddoc_t *) malloc(sizeof(appenddoc_t ));
+                        if(appenddata != NULL)
+                        {   
+                            memset(appenddata, 0, sizeof(appenddoc_t));
+ 
+                            appenddata->version = 2689711003;
+                            appenddata->transaction_id = 1001;
+                        }
+
+                        printf("Append Doc \n");
+                        appenddocPackSize = portmap_pack_appenddoc(appenddata, &appenddocdata);
+                        printf("appenddocPackSize is %ld\n", appenddocPackSize);
+	                printf("data packed is %s\n", (char*)appenddocdata);
+                        
+
+                        printf("---------------------------------------------------------------\n");
+                        embeddeddocPackSize = appendEncodedData(&embeddeddocdata, (void *)pm->entries[0].value, (size_t)pm->entries[0].value_size, appenddocdata, appenddocPackSize);
+                         printf("embeddeddocPackSize is %ld\n", embeddeddocPackSize);
+	                printf("data packed is %s\n", (char*)embeddeddocdata);
+
+                        b64_encoder(embeddeddocdata,embeddeddocPackSize);
+ 
+                        printf("\n-----------------------------End of Appenddocs---------------------------\n");
+
 			//decode inner blob
-			portmappingdoc_t *rpm;
+	/*		portmappingdoc_t *rpm;
                         int len =0;//, i =0;
 		        char *binfileData = NULL;
                         char subdocfile[64] = "decodeMsg.bin";
@@ -219,11 +256,11 @@ void portMappingPackUnpack()
 			msgpack_unpack_return unpack_ret;
 
 			printf("--------------decode blob-------------\n");
-                        readFromFile(subdocfile, &binfileData , &len);
+                        readFromFile1(subdocfile, &binfileData , &len);*/
                 //Start of msgpack decoding just to verify
 		printf("----Start of msgpack decoding----\n");
 		msgpack_zone_init(&mempool, 2048);
-		unpack_ret = msgpack_unpack(binfileData, len, NULL, &mempool, &deserialized);
+		unpack_ret = msgpack_unpack(embeddeddocdata, embeddeddocPackSize, NULL, &mempool, &deserialized);
 		printf("unpack_ret is %d\n",unpack_ret);
 		switch(unpack_ret)
 		{
@@ -251,12 +288,12 @@ void portMappingPackUnpack()
 		msgpack_zone_destroy(&mempool);
 		printf("----End of msgpack decoding----\n");
 			//rpm = portmappingdoc_convert( pm->entries[0].value, strlen(pm->entries[0].value) );
-                        rpm = portmappingdoc_convert( binfileData, len) ;
+                  //      rpm = portmappingdoc_convert( binfileData, len) ;
 			//printf("blob len %lu\n", strlen(pm->entries[0].value));
 			//err = errno;
 			//printf( "errno: %s\n", portmappingdoc_strerror(err) );
-			CU_ASSERT_FATAL( NULL != rpm );
-			CU_ASSERT_FATAL( NULL != rpm->entries );
+		//	CU_ASSERT_FATAL( NULL != rpm );
+		//	CU_ASSERT_FATAL( NULL != rpm->entries );
 			//CU_ASSERT_FATAL( 4 == rpm->entries_count );
 			
 /*
@@ -281,7 +318,7 @@ void portMappingPackUnpack()
 			CU_ASSERT_FATAL( 65535 == rpm->entries[3].version );
 
 */
-			for(int i = 0; i < (int)rpm->entries_count ; i++)
+			/*for(int i = 0; i < (int)rpm->entries_count ; i++)
 			{
 				printf("rpm->entries[%d].InternalClient %s\n", i, rpm->entries[i].internal_client);
 				printf("rpm->entries[%d].ExternalPortEndRange %s\n" , i, rpm->entries[i].external_port_end_range);
@@ -291,11 +328,11 @@ void portMappingPackUnpack()
 				printf("rpm->entries[%d].external_port %s\n", i, rpm->entries[i].external_port);
 			}
 
-			portmappingdoc_destroy( rpm );
-			//portmapping_destroy( pm );
-		//}
+			portmappingdoc_destroy( rpm );*/
+			webcfgparam_destroy( pm );
+		}
 
-	//}
+	}
 
 		
 }

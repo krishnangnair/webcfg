@@ -22,7 +22,7 @@
 
 typedef struct
 {
-    char  *etag; 
+    uint32_t  etag;
     char  *name_space;       
     char  *data;    
 } multipartdocs_t;
@@ -31,8 +31,8 @@ typedef struct
 {
     multipartdocs_t *entries; 
     size_t   entries_count; 
-    char *version;
-    char *transaction_id;     
+    uint32_t version;
+    uint16_t  transaction_id;
 } multipart_t;
 
 
@@ -45,6 +45,8 @@ typedef struct
 int webcfg_http_request(char *webConfigURL, char **configData, int r_count, long *code, char *interface, char** sub_buff, int *sub_len);
 int writeToFile(char *filename, char *data, int len);
 int readFromFile(char *filename, char **data, int *len);
+
+size_t appendEncodedData( void **appendData, void *encodedBuffer, size_t encodedSize, void *metadataPack, size_t metadataSize );
 
 
 #endif

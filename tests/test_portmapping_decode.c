@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <CUnit/Basic.h>
 #include "../src/portmappingdoc.h"
-#include "../src/portmappingpack.h"
+#include "../src/portmappingencoder.h"
 
 
 int readFromFile(char *filename, char **data, int *len)
@@ -122,7 +122,7 @@ void test_portmapping_decode()
 		err = errno;
 		printf( "errno: %s\n", portmappingdoc_strerror(err) );
 		CU_ASSERT_FATAL( NULL != rpm );
-		CU_ASSERT_FATAL( NULL != rpm->entries );
+		//CU_ASSERT_FATAL( NULL != rpm->entries );
 
 		for(int i = 0; i < (int)rpm->entries_count ; i++)
 		{
