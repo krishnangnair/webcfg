@@ -11,7 +11,9 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
+ * limitations under the License.i_t’
+                 wifi_t *rpm;
+
  */
 
 #include "multipart.h"
@@ -19,6 +21,8 @@
 #include "webcfgparam.h"
 #include "portmappingdoc.h"
 #include "portmappingencoder.h"
+#include "wifidoc.h"
+#include "wifi_helpers.h"
 #include <uuid/uuid.h>
 #include <string.h>
 #include <stdlib.h>
@@ -322,7 +326,7 @@ int webcfg_http_request(char *webConfigURL, char **configData, int r_count, long
 				printf("pm->entries[%d].type %d\n", i, pm->entries[i].type);
 			}
 
-                        appenddoc_t *appenddata = NULL;
+                       /* appenddoc_t *appenddata = NULL;
                         size_t appenddocPackSize = -1;
                         size_t embeddeddocPackSize = -1;
                         void *appenddocdata = NULL;
@@ -384,11 +388,11 @@ int webcfg_http_request(char *webConfigURL, char **configData, int r_count, long
 
 		msgpack_zone_destroy(&mempool);
 		printf("----End of msgpack decoding----\n");
-                printf("------PARSING--------------------\n");
+                printf("------PARSING--------------------\n");*/
                 
-                portmappingdoc_t *rpm;
-		rpm = portmappingdoc_convert( embeddeddocdata, embeddeddocPackSize );
-		printf("rpm->entries_count is %ld\n", rpm->entries_count);
+               wifi_t *rpm = NULL;
+		rpm = wifidoc_convert( (void *)pm->entries[0].value, (size_t)pm->entries[0].value_size );
+	/*	printf("rpm->entries_count is %ld\n", rpm->entries_count);
 
 		for(int i = 0; i < (int)rpm->entries_count ; i++)
 		{
@@ -398,9 +402,9 @@ int webcfg_http_request(char *webConfigURL, char **configData, int r_count, long
 			printf("rpm->entries[%d].Protocol %s\n", i, rpm->entries[i].protocol);
 			printf("rpm->entries[%d].Description %s\n", i, rpm->entries[i].description);
 			printf("rpm->entries[%d].external_port %s\n", i, rpm->entries[i].external_port);
-		}
+		}*/
 
-		portmappingdoc_destroy( rpm );
+		wifidoc_destroy( rpm );
                 printf("------END OF PARSING--------------------\n");
 		//End of msgpack decoding
 			
