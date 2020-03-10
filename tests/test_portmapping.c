@@ -22,6 +22,7 @@
 #include "../src/portmappingencoder.h"
 #include "../src/webcfgparam.h"
 #include "../src/multipart.h"
+#include "../src/wifidoc.h"
 
 void portMappingPackUnpack();
 /*

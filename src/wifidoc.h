@@ -23,14 +23,12 @@
 typedef struct
 {
     char*     ssid_name;
-    char      *ssid; 
     bool      enable;       
     bool  ssid_advertisement_enabled;    
 } ssid_t;
 
 typedef struct
 {
-    char*  security_name;
     char   *passphrase;
     char*  encription_method;       
     char*  mode_enabled;    
@@ -38,8 +36,10 @@ typedef struct
 
 typedef struct
 {
-    ssid_t *ssid;
-    security_t *security;   
+    ssid_t *ssid_2g;
+    security_t *security_2g; 
+    ssid_t *ssid_5g;
+    security_t *security_5g;    
 } wifi_t;
 
 /**

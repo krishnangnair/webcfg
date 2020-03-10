@@ -75,24 +75,31 @@ void* wifi_helper_convert( const void *buf, size_t len,
 	    msgpack_object obj = msg.data;
 	    msgpack_object_print(stdout, obj);
             printf("\nMSGPACK_OBJECT_MAP is %d  msg.data.type %d\n", MSGPACK_OBJECT_MAP, msg.data.type);
-
+	    printf("wrapper %s\n", wrapper);
+	    printf("%c expect_type\n", expect_type);
+	    printf("%c optional\n", optional);
+		if(0 == (process))
+		{
+		}
+	    
             if( (MSGPACK_UNPACK_SUCCESS == mp_rv) && (0 != offset) &&
                 (MSGPACK_OBJECT_MAP == msg.data.type) )
             {
                 msgpack_object *wifi_inner;
-                msgpack_object *wifi_private_ssid;
+               /* msgpack_object *wifi_private_ssid;
                 msgpack_object *wifi_private_security_2g;
-                msgpack_object *wifi_private_security_5g;
+                msgpack_object *wifi_private_security_5g;*/
 
                 wifi_inner = &msg.data;
-                wifi_private_ssid = &msg.data;
+              /*  wifi_private_ssid = &msg.data;
                 wifi_private_security_2g = &msg.data;
-                wifi_private_security_5g = &msg.data;
+                wifi_private_security_5g = &msg.data;*/
                 
                 if( NULL != wrapper && 0 == strcmp(wrapper,"private_ssid_2g")) 
                 {
                     wifi_inner = __finder( wrapper, expect_type, &msg.data.via.map );
-                    wifi_private_ssid =  __finder( "private_ssid_5g", expect_type, &msg.data.via.map );
+                    printf("private_ssid_2g is %ld\n", (size_t)wifi_inner);
+                   /* wifi_private_ssid =  __finder( "private_ssid_5g", expect_type, &msg.data.via.map );
                     wifi_private_security_2g =  __finder( "private_security_2g", expect_type, &msg.data.via.map );
 		    wifi_private_security_5g =  __finder( "private_security_5g", expect_type, &msg.data.via.map );
 
@@ -111,10 +118,10 @@ void* wifi_helper_convert( const void *buf, size_t len,
                     {     
                          printf("Invalid first element\n");
                          errno = HELPERS_INVALID_FIRST_ELEMENT;
-                    }
+                    }*/
                 } 
 
-              }
+              } 
             msgpack_unpacked_destroy( &msg );
             if(NULL!=p)
             {
@@ -131,7 +138,7 @@ void* wifi_helper_convert( const void *buf, size_t len,
 /*                             Internal functions                             */
 /*----------------------------------------------------------------------------*/
 
-msgpack_object* __finder( const char *name, 
+msgpack_object* __finder_wifi( const char *name, 
                           msgpack_object_type expect_type,
                           msgpack_object_map *map )
 {
@@ -142,8 +149,8 @@ msgpack_object* __finder( const char *name,
     {
         if( MSGPACK_OBJECT_STR == map->ptr[i].key.type ) 
         {
-            //printf("The val.type is : %d\n",map->ptr[i].val.type);
-            //printf("expect_type :%d\n",expect_type);
+            printf("The val.type is : %d\n",map->ptr[i].val.type);
+            printf("expect_type :%d\n",expect_type);
             if( expect_type == map->ptr[i].val.type ) 
             {
                 if( 0 == match(&(map->ptr[i]), name) ) 

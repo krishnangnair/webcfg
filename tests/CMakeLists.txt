@@ -28,7 +28,7 @@ link_directories ( ${LIBRARY_DIR} )
 #   test_portmapping
 #-------------------------------------------------------------------------------
 add_test(NAME test_portmapping COMMAND ${MEMORY_CHECK} ./test_portmapping)
-add_executable(test_portmapping test_portmapping.c ../src/multipart.c ../src/portmappingdoc.c ../src/portmappingencoder.c ../src/helpers.c ../src/webcfgparam.c ../src/array_helpers.c)
+add_executable(test_portmapping test_portmapping.c ../src/multipart.c ../src/portmappingdoc.c ../src/portmappingencoder.c ../src/helpers.c ../src/webcfgparam.c ../src/array_helpers.c ../src/wifidoc.c ../src/wifi_helpers.c)
 target_link_libraries (test_portmapping -lcunit -lcurl -lmsgpackc -ltrower-base64)
 
 target_link_libraries (test_portmapping gcov -Wl,--no-as-needed )
@@ -78,6 +78,15 @@ target_link_libraries (test_multipart -lcunit -lmsgpackc -lcurl -luuid -ltrower-
 
 target_link_libraries (test_multipart gcov -Wl,--no-as-needed )
 
+#-------------------------------------------------------------------------------
+#   test_wifiparameters
+#-------------------------------------------------------------------------------
+add_test(NAME test_wifiparameters COMMAND ${MEMORY_CHECK} ./test_wifiparameters)
+add_executable(test_wifiparameters test_wifiparameters.c ../src/webcfgdoc.c ../src/webcfgparam.c ../src/multipart.c ../src/helpers.c ../src/array_helpers.c ../src/helpers.c ../src/portmappingdoc.c ../src/portmappingencoder.c ../src/macbindingdoc.c ../src/wifidoc.c ../src/wifi_helpers.c)
+target_link_libraries (test_wifiparameters -lcunit -lmsgpackc -lcurl -luuid -ltrower-base64)
+
+target_link_libraries (test_wifiparameters gcov -Wl,--no-as-needed )
+
 # Code coverage
 
 add_custom_target(coverage
@@ -89,12 +98,15 @@ COMMAND lcov -q --capture --directory
 ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_webcfgparam.dir/__/src --output-file test_webcfgparam.info
 COMMAND lcov -q --capture --directory
 ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_portmapping.dir/__/src --output-file test_portmapping.info 
+COMMAND lcov -q --capture --directory
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_wifiparameters.dir/__/src --output-file test_wifiparameters.info
 
 COMMAND lcov
 -a test_webcfgdoc.info
 -a test_webcfgparam.info
 -a test_portmapping.info
 -a test_webcfgpack.info
+-a test_wifiparameters.info
 --output-file coverage.info
 
 COMMAND genhtml coverage.info

@@ -56,47 +56,64 @@ enum {
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
-int process_wifidocparams( wifidoc_t *e, msgpack_object_map *map );
-int process_wifimappingdoc( wifimappingdoc_t *pm, int num, ...); 
+int process_wifidocparams( wifi_t *e, msgpack_object_map *map );
+int process_wifimappingdoc( wifi_t *pm, int num, ...); 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
 
 /* See portmappingdoc.h for details. */
-wifidoc_t* wifidoc_convert( const void *buf, size_t len )
+wifi_t* wifidoc_convert( const void *buf, size_t len )
 {
-	return wifi_helper_convert( buf, len, sizeof(wifi_t), "home_ssid_2g", 
+	return wifi_helper_convert( buf, len, sizeof(wifi_t), "private_ssid_2g", 
                             MSGPACK_OBJECT_ARRAY, true,
                            (process_fn_t) process_wifimappingdoc,
-                           (destroy_fn_t) wifimappingdoc_destroy );
+                           (destroy_fn_t) wifidoc_destroy );
 }
 
 /* See portmappingdoc.h for details. */
-void wifidoc_destroy( wifimappingdoc_t *pm )
+void wifidoc_destroy( wifi_t *pm )
 {
     if( NULL != pm ) {
         size_t i;
-        for( i = 0; i < pm->entries_count; i++ )
+        for( i = 0; i < (size_t)2; i++ )
         {
-            if( NULL != pm->entries[i].internal_client )
+            if( NULL != pm->ssid_2g[i].ssid_name )
             {
-                free( pm->entries[i].internal_client );
+                free( pm->ssid_2g[i].ssid_name );
             }
 	    
-	    if( NULL != pm->entries[i].protocol )
+	    if( NULL != pm->security_2g[i].passphrase )
             {
-                free( pm->entries[i].protocol );
+                free( pm->security_2g[i].passphrase );
             }
-	    if( NULL != pm->entries[i].description )
+	    if( NULL != pm->security_2g[i].encription_method )
             {
-                free( pm->entries[i].description );
+                free( pm->security_2g[i].encription_method );
+            }
+		if( NULL != pm->security_2g[i].mode_enabled )
+            {
+                free( pm->security_2g[i].mode_enabled );
+            }
+		if( NULL != pm->ssid_5g[i].ssid_name )
+            {
+                free( pm->ssid_5g[i].ssid_name );
+            }
+	    
+	    if( NULL != pm->security_5g[i].passphrase )
+            {
+                free( pm->security_5g[i].passphrase );
+            }
+	    if( NULL != pm->security_5g[i].encription_method )
+            {
+                free( pm->security_5g[i].encription_method );
+            }
+		if( NULL != pm->security_5g[i].mode_enabled )
+            {
+                free( pm->security_5g[i].mode_enabled );
             }
         }
-        if( NULL != pm->entries )
-        {
-            free( pm->entries );
-        }
-        free( pm );
+         free( pm );
     }
 }
 
@@ -137,10 +154,12 @@ const char* wifidoc_strerror( int errnum )
  *
  *  @return 0 on success, error otherwise
  */
-int process_wifidocparams( wifidoc_t *e, msgpack_object_map *map )
+/*int process_wifidocparams( wifi_t *e, msgpack_object_map *map )
 {
+    	printf("process_wifidocparams %s \n", (char *)e);
+	printf("process_wifidocparams %d \n", *map);
     int left = map->size;
-    uint8_t objects_left = 0x06;
+    uint8_t objects_left = 0x02;
     msgpack_object_kv *p;
 
     p = map->ptr;
@@ -190,7 +209,7 @@ int process_wifidocparams( wifidoc_t *e, msgpack_object_map *map )
         
     
     //printf("objects_left after out %d\n", objects_left);
-    if( 1 & objects_left ) {
+    if( 1 & objects_left ) {*/
    /*     errno = PM_MISSING_INTERNAL_PORT;
     } else if( (1 << 1) & objects_left ) {
         errno = PM_MISSING_TARGET_IP;
@@ -198,16 +217,19 @@ int process_wifidocparams( wifidoc_t *e, msgpack_object_map *map )
         errno = PM_MISSING_PORT_RANGE;
     } else if( (1 << 3) & objects_left ) {
         errno = PM_MISSING_PROTOCOL;*/
-    } else {
+    /*} else {
         errno = PM_OK;
     }
    
     return (0 == objects_left) ? 0 : -1;
-}
+	return 0;	
+}*/
 
-int process_wifimappingdoc( wifimappingdoc_t *pm,int num, ... )
+int process_wifimappingdoc( wifi_t *pm,int num, ... )
 {   
-    va_list valist;
+	printf("process_wifimappingdoc %s \n", (char *)pm);
+	 printf("process_wifimappingdoc %d \n", num);
+    /* va_list valist;
     va_start(valist, num);
     
     msgpack_object *obj = va_arg(valist, msgpack_object *);
@@ -230,7 +252,7 @@ int process_wifimappingdoc( wifimappingdoc_t *pm,int num, ... )
         printf("pm->version in blob is %ld\n",(long)pm->version);
         printf("pm->transaction_id in blob is %d\n",pm->transaction_id);
 
-        pm->entries = (portdoc_t *) malloc( sizeof(wifidoc_t) * pm->entries_count );
+        pm->entries = (portdoc_t *) malloc( sizeof(wifi_t) * pm->entries_count );
 
         if( NULL == pm->entries )
         {
@@ -239,7 +261,7 @@ int process_wifimappingdoc( wifimappingdoc_t *pm,int num, ... )
             return -1;
         }
 
-        memset( pm->entries, 0, sizeof(wifidoc_t) * pm->entries_count );
+        memset( pm->entries, 0, sizeof(wifi_t) * pm->entries_count );
 
         for( i = 0; i < pm->entries_count; i++ )
         {
@@ -257,7 +279,7 @@ int process_wifimappingdoc( wifimappingdoc_t *pm,int num, ... )
             }
            
         }
-    }
+    } */
 
     return 0;
 }
