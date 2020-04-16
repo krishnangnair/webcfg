@@ -12,13 +12,11 @@
  */
 #ifdef BUILD_YOCTO
 
-#define WEBCFG_RDK_LOGGING_MODULE                 "LOG.RDK.WEBCONFIG"
+#define WebConfigLog(...)       __cimplog_generic("WEBPA", __VA_ARGS__)
 
-#define WebConfigLog(...)       __cimplog_rdk_generic(WEBCFG_RDK_LOGGING_MODULE, WEBCFG_LOGGING_MODULE, LEVEL_INFO, __VA_ARGS__)
-
-#define WebcfgError(...)	__cimplog_rdk_generic(WEBCFG_RDK_LOGGING_MODULE, WEBCFG_LOGGING_MODULE, LEVEL_ERROR, __VA_ARGS__)
-#define WebcfgInfo(...)		__cimplog_rdk_generic(WEBCFG_RDK_LOGGING_MODULE, WEBCFG_LOGGING_MODULE, LEVEL_INFO, __VA_ARGS__)
-#define WebcfgDebug(...)	__cimplog_rdk_generic(WEBCFG_RDK_LOGGING_MODULE, WEBCFG_LOGGING_MODULE, LEVEL_DEBUG, __VA_ARGS__)
+#define WebcfgError(...)	cimplog_error(WEBCFG_LOGGING_MODULE, __VA_ARGS__)
+#define WebcfgInfo(...)		cimplog_info(WEBCFG_LOGGING_MODULE, __VA_ARGS__)
+#define WebcfgDebug(...)	cimplog_debug(WEBCFG_LOGGING_MODULE, __VA_ARGS__)
 
 #else
 #define WebConfigLog(...)       printf(__VA_ARGS__)

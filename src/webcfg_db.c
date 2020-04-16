@@ -74,11 +74,10 @@ int process_webcfgdbblobparams( blob_data_t *e, msgpack_object_map *map );
 WEBCFG_STATUS initDB(char * db_file_path )
 {
      FILE *fp;
+     size_t sz;
      char *data;
      size_t len;
-     int ch_count=0;
-     webconfig_db_data_t* dm = NULL;
-
+     int ch_count = 0;
      WebConfigLog("DB file path is %s\n", db_file_path);
      fp = fopen(db_file_path,"rb");
 
@@ -89,17 +88,30 @@ WEBCFG_STATUS initDB(char * db_file_path )
      }
      
      fseek(fp, 0, SEEK_END);
+     /*if (fseek(fp, 0, SEEK_END) == -1)
+    {
+        printf("failed to fseek %s\n", db_file_path);
+        return WEBCFG_FAILURE;
+    }*/
      ch_count = ftell(fp);
+     if (ch_count == (int)-1)
+    {
+        printf("failed to ftell %s\n", db_file_path);
+        return WEBCFG_FAILURE;
+    }
      fseek(fp, 0, SEEK_SET);
      data = (char *) malloc(sizeof(char) * (ch_count + 1));
-     fread(data, 1, ch_count,fp);
+     sz = fread(data, 1, ch_count,fp);
+     if (sz == (size_t)-1) 
+	{	
+		fclose(fp);
+		WebConfigLog("fread failed.\n");
+		return WEBCFG_FAILURE;
+	}
      len = ch_count;
      fclose(fp);
 
-     dm = decodeData((void *)data, len);
-     WebConfigLog("webcfgdb_destroy\n");
-     webcfgdb_destroy (dm );
-     WebConfigLog("After webcfgdb_destroy\n");
+     decodeData((void *)data, len);
      WEBCFG_FREE(data);
      generateBlob();
      return WEBCFG_SUCCESS;
@@ -130,14 +142,6 @@ WEBCFG_STATUS generateBlob()
     size_t webcfgdbBlobPackSize = -1;
     void * data = NULL;
 
-    if(webcfgdb_blob)
-    {
-	WebConfigLog("Delete existing webcfgdb_blob.\n");
-	WEBCFG_FREE(webcfgdb_blob->data);
-	WEBCFG_FREE(webcfgdb_blob);
-	webcfgdb_blob = NULL;
-    }
-    WebConfigLog("Generate new blob\n");
     if(webcfgdb_data != NULL || g_head != NULL)
     {
         webcfgdbBlobPackSize = webcfgdb_blob_pack(webcfgdb_data, g_head, &data);
@@ -197,18 +201,6 @@ blob_struct_t* decodeBlobData(const void * buf, size_t len)
                            (destroy_fn_t) webcfgdbblob_destroy );
 }
 
-
-void webcfgdb_destroy( webconfig_db_data_t *pm )
-{
-	if( NULL != pm )
-	{
-		if( NULL != pm->name )
-		{
-			free( pm->name );
-		}
-		free( pm );
-	}
-}
 
 void webcfgdbblob_destroy( blob_struct_t *bd )
 {
@@ -615,6 +607,7 @@ int process_webcfgdb( webconfig_db_data_t *wd, msgpack_object *obj )
             if( 0 != process_webcfgdbparams(wd, &array->ptr[i].via.map) )
             {
 		//WebConfigLog("process_webcfgdbparam failed\n");
+		WEBCFG_FREE(wd);
                 return -1;
             }
             else
