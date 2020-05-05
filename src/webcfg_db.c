@@ -80,7 +80,7 @@ WEBCFG_STATUS initDB(char * db_file_path )
      int ch_count=0;
      webconfig_db_data_t* dm = NULL;
 
-     WebcfgDebug("DB file path is %s\n", db_file_path);
+     WebcfgInfo("DB file path is %s\n", db_file_path);
      fp = fopen(db_file_path,"rb");
 
      if (fp == NULL)
@@ -108,10 +108,13 @@ WEBCFG_STATUS initDB(char * db_file_path )
 		return WEBCFG_FAILURE;
 	}
      len = ch_count;
+	WebcfgInfo("DB file path data is %s\n",data);
      fclose(fp);
-
+	WebcfgInfo("before decode data \n");
      dm = decodeData((void *)data, len);
+     WebcfgInfo("DB file path data after decode is %s\n",data);
      webcfgdb_destroy (dm );
+	WebcfgInfo("DB file path data after decode is1 %s\n",data);
      WEBCFG_FREE(data);
      generateBlob();
      return WEBCFG_SUCCESS;
@@ -124,9 +127,9 @@ WEBCFG_STATUS addNewDocEntry(size_t count)
      size_t webcfgdbPackSize = -1;
      void* data = NULL;
  
-     WebcfgDebug("size of subdoc %ld\n", (size_t)count);
+     WebcfgInfo("size of subdoc %ld\n", (size_t)count);
      webcfgdbPackSize = webcfgdb_pack(webcfgdb_data, &data, count);
-     WebcfgDebug("size of webcfgdbPackSize %ld\n", webcfgdbPackSize);
+     WebcfgInfo("size of webcfgdbPackSize %ld\n", webcfgdbPackSize);
      WebcfgInfo("writeToDBFile %s\n", WEBCFG_DB_FILE);
      writeToDBFile(WEBCFG_DB_FILE,(char *)data);
      if(data)
@@ -144,12 +147,13 @@ WEBCFG_STATUS generateBlob()
 
     if(webcfgdb_blob)
     {
-	WebcfgDebug("Delete existing webcfgdb_blob.\n");
+	WebcfgInfo("Delete existing webcfgdb_blob.\n");
+	WebcfgInfo("Delete existing webcfgdb_blob: %s\n",webcfgdb_blob->data);
 	WEBCFG_FREE(webcfgdb_blob->data);
 	WEBCFG_FREE(webcfgdb_blob);
 	webcfgdb_blob = NULL;
     }
-    WebcfgDebug("Generate new blob\n");
+    WebcfgInfo("Generate new blob\n");
     if(webcfgdb_data != NULL || g_head != NULL)
     {
         webcfgdbBlobPackSize = webcfgdb_blob_pack(webcfgdb_data, g_head, &data);
@@ -157,13 +161,14 @@ WEBCFG_STATUS generateBlob()
         webcfgdb_blob->data = (char *)data;
         webcfgdb_blob->len  = webcfgdbBlobPackSize;
 
-        WebcfgDebug("The webcfgdbBlobPackSize is : %ld\n",webcfgdb_blob->len);
-        //WebcfgDebug("The value of blob is %s\n",webcfgdb_blob->data);
+        WebcfgInfo("The webcfgdbBlobPackSize is : %ld\n",webcfgdb_blob->len);
+        WebcfgInfo("The value of blob is %s\n",webcfgdb_blob->data);
         return WEBCFG_SUCCESS;
     }
     else
     {
         WebcfgError("Failed in packing blob\n");
+	WebcfgInfo("Failed in packing blob\n");
         return WEBCFG_FAILURE;
     }
 }
@@ -175,17 +180,20 @@ int writeToDBFile(char *db_file_path, char *data)
 	if (fp == NULL)
 	{
 		WebcfgError("Failed to open file in db %s\n", db_file_path );
+		WebcfgInfo("Failed to open file in db %s\n", db_file_path );
 		return 0;
 	}
 	if(data !=NULL)
 	{
 		fwrite(data, strlen(data), 1, fp);
+		WebcfgInfo("data is not equal to null\n");
 		fclose(fp);
 		return 1;
 	}
 	else
 	{
 		WebcfgError("WriteToJson failed, Data is NULL\n");
+		WebcfgInfo("WriteToJson failed, Data is NULL\n");
 		fclose(fp);
 		return 0;
 	}
@@ -194,6 +202,7 @@ int writeToDBFile(char *db_file_path, char *data)
 //Used to decode the DB bin file 
 webconfig_db_data_t* decodeData(const void * buf, size_t len)
 {
+     WebcfgInfo("in decode data \n");
      return helper_convert( buf, len, sizeof(webconfig_db_data_t),"webcfgdb",
                            MSGPACK_OBJECT_ARRAY, true,
                            (process_fn_t) process_webcfgdb,
@@ -203,6 +212,7 @@ webconfig_db_data_t* decodeData(const void * buf, size_t len)
 //Used to decode the webconfig_tmp_data_t and webconfig_db_data_t msgpack
 blob_struct_t* decodeBlobData(const void * buf, size_t len)
 {
+     WebcfgInfo("decodeBlobData \n");
      return helper_convert( buf, len, sizeof(blob_struct_t),"webcfgblob",
                            MSGPACK_OBJECT_ARRAY, true,
                            (process_fn_t) process_webcfgdbblob,
@@ -212,10 +222,13 @@ blob_struct_t* decodeBlobData(const void * buf, size_t len)
 
 void webcfgdb_destroy( webconfig_db_data_t *pm )
 {
+	WebcfgInfo("webcfgdb_destroy:\n");
 	if( NULL != pm )
 	{
+		WebcfgInfo("webcfgdb_destroy:%s\n",pm->name);
 		if( NULL != pm->name )
 		{
+			WebcfgInfo("webcfgdb_destro: %s\n",pm->name);
 			free( pm->name );
 		}
 		free( pm );
@@ -224,20 +237,25 @@ void webcfgdb_destroy( webconfig_db_data_t *pm )
 
 void webcfgdbblob_destroy( blob_struct_t *bd )
 {
+    WebcfgInfo("webcfgdbblob_destroy:\n");
     if( NULL != bd ) {
         size_t i;
         for( i = 0; i < bd->entries_count; i++ ) {
             if( NULL != bd->entries[i].name ) {
+		WebcfgInfo("webcfgdbblob_destroy:entries[i].name\n");
                 free( bd->entries[i].name );
             }
             if( NULL != bd->entries[i].status ) {
+		WebcfgInfo("webcfgdbblob_destroy:entries[i].status\n");
                 free( bd->entries[i].status );
             }
 	    if( NULL != bd->entries[i].error_details ) {
+		WebcfgInfo("webcfgdbblob_destroy:entries[i].error_details\n");
                 free( bd->entries[i].error_details );
             }
         }
         if( NULL != bd->entries ) {
+	    WebcfgInfo("webcfgdbblob_destroy:bd->entries\n");
             free( bd->entries );
         }
         free( bd );
@@ -323,12 +341,12 @@ WEBCFG_STATUS addToTmpList( multipart_t *mp)
 	int m = 0;
 	int retStatus = WEBCFG_FAILURE;
 
-	WebcfgDebug("mp->entries_count is %zu\n", mp->entries_count);
+	WebcfgInfo("mp->entries_count is %zu\n", mp->entries_count);
 	numOfMpDocs = 0;
-	WebcfgDebug("reset numOfMpDocs to %d\n", numOfMpDocs);
+	WebcfgInfo("reset numOfMpDocs to %d\n", numOfMpDocs);
 
 	delete_tmp_doc_list();
-	WebcfgDebug("Deleted existing tmp list, proceed to addToTmpList\n");
+	WebcfgInfo("Deleted existing tmp list, proceed to addToTmpList\n");
 
 	for(m = 0 ; m<((int)mp->entries_count); m++)
 	{
@@ -340,7 +358,7 @@ WEBCFG_STATUS addToTmpList( multipart_t *mp)
 
 			if(numOfMpDocs == 0)
 			{
-				WebcfgDebug("Adding root doc to list\n");
+				WebcfgInfo("Adding root doc to list\n");
 				new_node->name = strdup("root");
 				new_node->version = get_global_root();
 				new_node->status = strdup("pending");
@@ -349,16 +367,16 @@ WEBCFG_STATUS addToTmpList( multipart_t *mp)
 			else
 			{
 				new_node->name = strdup(mp->entries[m-1].name_space);
-				WebcfgDebug("mp->entries[m-1].name_space is %s\n", mp->entries[m-1].name_space);
+				WebcfgInfo("mp->entries[m-1].name_space is %s\n", mp->entries[m-1].name_space);
 				new_node->version = mp->entries[m-1].etag;
 				new_node->status = strdup("pending");
 				new_node->error_details = strdup("none");
 			}
 
-			WebcfgDebug("new_node->name is %s\n", new_node->name);
-			WebcfgDebug("new_node->version is %lu\n", (long)new_node->version);
-			WebcfgDebug("new_node->status is %s\n", new_node->status);
-			WebcfgDebug("new_node->error_details is %s\n", new_node->error_details);
+			WebcfgInfo("new_node->name is %s\n", new_node->name);
+			WebcfgInfo("new_node->version is %lu\n", (long)new_node->version);
+			WebcfgInfo("new_node->status is %s\n", new_node->status);
+			WebcfgInfo("new_node->error_details is %s\n", new_node->error_details);
 
 
 			new_node->next=NULL;
@@ -370,7 +388,7 @@ WEBCFG_STATUS addToTmpList( multipart_t *mp)
 			else
 			{
 				webconfig_tmp_data_t *temp = NULL;
-				WebcfgDebug("Adding docs to list\n");
+				WebcfgInfo("Adding docs to list\n");
 				temp = g_head;
 				while(temp->next !=NULL)
 				{
@@ -379,18 +397,18 @@ WEBCFG_STATUS addToTmpList( multipart_t *mp)
 				temp->next=new_node;
 			}
 
-			WebcfgDebug("--->>doc %s with version %lu is added to list\n", new_node->name, (long)new_node->version);
+			WebcfgInfo("--->>doc %s with version %lu is added to list\n", new_node->name, (long)new_node->version);
 			numOfMpDocs = numOfMpDocs + 1;
 		}
-		WebcfgDebug("numOfMpDocs %d\n", numOfMpDocs);
+		WebcfgInfo("numOfMpDocs %d\n", numOfMpDocs);
 
 		if((int)mp->entries_count == numOfMpDocs)
 		{
-			WebcfgDebug("addToTmpList success\n");
+			WebcfgInfo("addToTmpList success\n");
 			retStatus = WEBCFG_SUCCESS;
 		}
 	}
-	WebcfgDebug("addToList return %d\n", retStatus);
+	WebcfgInfo("addToList return %d\n", retStatus);
 	return retStatus;
 }
 
@@ -419,11 +437,11 @@ WEBCFG_STATUS updateDBlist(char *docname, uint32_t version)
 	//Traverse through doc list & update required doc
 	while (NULL != webcfgdb)
 	{
-		WebcfgDebug("node is pointing to webcfgdb->name %s, docname %s, dblen %zu, doclen %zu \n",webcfgdb->name, docname, strlen(webcfgdb->name), strlen(docname));
+		WebcfgInfo("node is pointing to webcfgdb->name %s, docname %s, dblen %zu, doclen %zu \n",webcfgdb->name, docname, strlen(webcfgdb->name), strlen(docname));
 		if( strcmp(docname, webcfgdb->name) == 0)
 		{
 			webcfgdb->version = version;
-			WebcfgDebug("webcfgdb %s is updated to version %lu\n", docname, (long)webcfgdb->version);
+			WebcfgInfo("webcfgdb %s is updated to version %lu\n", docname, (long)webcfgdb->version);
 			return WEBCFG_SUCCESS;
 		}
 		webcfgdb= webcfgdb->next;
@@ -439,7 +457,7 @@ WEBCFG_STATUS updateTmpList(char *docname, uint32_t version, char *status, char 
 	//Traverse through doc list & update required doc
 	while (NULL != temp)
 	{
-		//WebcfgDebug("node is pointing to temp->name %s \n",temp->name);
+		WebcfgInfo("node is pointing to temp->name %s \n",temp->name);
 		if( strcmp(docname, temp->name) == 0)
 		{
 			temp->version = version;
@@ -472,9 +490,10 @@ WEBCFG_STATUS deleteFromTmpList(char* doc_name)
 	if( NULL == doc_name )
 	{
 		WebcfgError("Invalid value for doc\n");
+		WebcfgInfo("Invalid value for doc\n");
 		return WEBCFG_FAILURE;
 	}
-	WebcfgDebug("doc to be deleted: %s\n", doc_name);
+	WebcfgInfo("doc to be deleted: %s\n", doc_name);
 
 	prev_node = NULL;
 	curr_node = g_head ;
@@ -484,27 +503,27 @@ WEBCFG_STATUS deleteFromTmpList(char* doc_name)
 	{
 		if(strcmp(curr_node->name, doc_name) == 0)
 		{
-			WebcfgDebug("Found the node to delete\n");
+			WebcfgInfo("Found the node to delete\n");
 			if( NULL == prev_node )
 			{
-				WebcfgDebug("need to delete first doc\n");
+				WebcfgInfo("need to delete first doc\n");
 				g_head = curr_node->next;
 			}
 			else
 			{
-				WebcfgDebug("Traversing to find node\n");
+				WebcfgInfo("Traversing to find node\n");
 				prev_node->next = curr_node->next;
 			}
 
-			WebcfgDebug("Deleting the node entries\n");
+			WebcfgInfo("Deleting the node entries\n");
 			WEBCFG_FREE( curr_node->name );
 			WEBCFG_FREE( curr_node->status );
 			WEBCFG_FREE( curr_node->error_details );
 			WEBCFG_FREE( curr_node );
 			curr_node = NULL;
-			WebcfgDebug("Deleted successfully and returning..\n");
+			WebcfgInfo("Deleted successfully and returning..\n");
 			numOfMpDocs =numOfMpDocs - 1;
-			WebcfgDebug("numOfMpDocs after delete is %d\n", numOfMpDocs);
+			WebcfgInfo("numOfMpDocs after delete is %d\n", numOfMpDocs);
 			return WEBCFG_SUCCESS;
 		}
 
@@ -525,12 +544,12 @@ void delete_tmp_doc_list()
     {
         temp = head;
         head = head->next;
-	WebcfgDebug("Delete node--> temp->name %s temp->version %lu temp->status %s temp->error_details %s\n",temp->name, (long)temp->version, temp->status, temp->error_details);
+	WebcfgInfo("Delete node--> temp->name %s temp->version %lu temp->status %s temp->error_details %s\n",temp->name, (long)temp->version, temp->status, temp->error_details);
         free(temp);
 	temp = NULL;
     }
     g_head = NULL;
-    WebcfgDebug("Deleted all docs from tmp list\n");
+    WebcfgInfo("Deleted all docs from tmp list\n");
 }
 /*----------------------------------------------------------------------------*/
 /*                             Internal functions                             */
@@ -549,7 +568,7 @@ int process_webcfgdbparams( webconfig_db_data_t *e, msgpack_object_map *map )
     int left = map->size;
     uint8_t objects_left = 0x02;
     msgpack_object_kv *p;
-
+	WebcfgInfo("inside process_webcfgdb\n");
     p = map->ptr;
     while( (0 < objects_left) && (0 < left--) )
     {
@@ -562,12 +581,14 @@ int process_webcfgdbparams( webconfig_db_data_t *e, msgpack_object_map *map )
                     if( UINT32_MAX < p->val.via.u64 )
                     {
 			//WebcfgDebug("e->type is %d\n", e->type);
+			WebcfgInfo("inside process_webcfgdb type\n");
                         errno = WD_INVALID_DATATYPE;
                         return -1;
                     }
                     else
                     {
                         e->version = (uint32_t) p->val.via.u64;
+			WebcfgInfo("inside process_webcfgdb version\n");
 			//WebcfgDebug("e->version is %lu\n", (long)e->version);
                     }
                     objects_left &= ~(1 << 1);
@@ -580,6 +601,7 @@ int process_webcfgdbparams( webconfig_db_data_t *e, msgpack_object_map *map )
                 if( 0 == match(p, "name") )
                 {
                     e->name = strndup( p->val.via.str.ptr, p->val.via.str.size );
+			WebcfgInfo("inside process_webcfgdb name\n");
 		    //WebcfgDebug("e->name is %s\n", e->name);
                     objects_left &= ~(1 << 0);
 		    //WebcfgDebug("objects_left after name %d\n", objects_left);
@@ -611,7 +633,7 @@ int process_webcfgdb( webconfig_db_data_t *wd, msgpack_object *obj )
 
         entries_count = array->size;
         webcfgdb_data = NULL;
-        WebcfgDebug("entries_count %zu\n",entries_count);
+        WebcfgInfo("entries_count %zu\n",entries_count);
         for( i = 0; i < entries_count; i++ )
         {
             wd = (webconfig_db_data_t *) malloc (sizeof(webconfig_db_data_t));   
@@ -619,11 +641,13 @@ int process_webcfgdb( webconfig_db_data_t *wd, msgpack_object *obj )
             {
                 errno = WD_INVALID_WD_OBJECT;
 		WEBCFG_FREE(wd);
+		WebcfgInfo("process_webcfgdb\n");
                 return -1;
             }
             if( 0 != process_webcfgdbparams(wd, &array->ptr[i].via.map) )
             {
 		WebcfgError("process_webcfgdbparam failed\n");
+		WebcfgInfo("process_webcfgdbparam failed\n");
 		WEBCFG_FREE(wd);
                 return -1;
             }
@@ -673,17 +697,17 @@ char * get_DB_BLOB_base64()
 
     if(db_blob != NULL)
     {
-        WebcfgDebug("-----------Start of Base64 Encode ------------\n");
+        WebcfgInfo("-----------Start of Base64 Encode ------------\n");
         encodeSize = b64_get_encoded_buffer_size( db_blob->len );
-        WebcfgDebug("encodeSize is %zu\n", encodeSize);
+        WebcfgInfo("encodeSize is %zu\n", encodeSize);
         b64buffer = malloc(encodeSize + 1);
         b64_encode((uint8_t *)db_blob->data, db_blob->len, (uint8_t *)b64buffer);
         b64buffer[encodeSize] = '\0' ;
 
 	//Start of b64 decoding for debug purpose
-	WebcfgDebug("----Start of b64 decoding----\n");
+	WebcfgInfo("----Start of b64 decoding----\n");
 	decodeMsgSize = b64_get_decoded_buffer_size(strlen(b64buffer));
-	WebcfgDebug("expected b64 decoded msg size : %ld bytes\n",decodeMsgSize);
+	WebcfgInfo("expected b64 decoded msg size : %ld bytes\n",decodeMsgSize);
 
 	decodeMsg = (char *) malloc(sizeof(char) * decodeMsgSize);
 	if(decodeMsg)
@@ -694,7 +718,7 @@ char * get_DB_BLOB_base64()
 
 		blob_struct_t *bd = NULL;
 		bd = decodeBlobData((void *)decodeMsg, size);
-		WebcfgDebug("Size of webcfgdbblob %ld\n", (size_t)bd);
+		WebcfgInfo("Size of webcfgdbblob %ld\n", (size_t)bd);
 		if(bd != NULL)
 		{
 			for(k = 0;k< bd->entries_count ; k++)
@@ -707,7 +731,7 @@ char * get_DB_BLOB_base64()
 		WEBCFG_FREE(decodeMsg);
 	}
 
-        WebcfgDebug("---------- End of Base64 decode -------------\n");
+        WebcfgInfo("---------- End of Base64 decode -------------\n");
      }
      else
      {
@@ -786,7 +810,7 @@ int process_webcfgdbblobparams( blob_data_t *e, msgpack_object_map *map )
 
 int process_webcfgdbblob( blob_struct_t *bd, msgpack_object *obj )
 {
-    WebcfgDebug(" process_webcfgdbblob \n");
+    WebcfgInfo(" process_webcfgdbblob \n");
     msgpack_object_array *array = &obj->via.array;
     if( 0 < array->size )
     {
@@ -800,7 +824,7 @@ int process_webcfgdbblob( blob_struct_t *bd, msgpack_object *obj )
             return -1;
         }
         
-        WebcfgDebug("bd->entries_count %zu\n",bd->entries_count);
+        WebcfgInfo("bd->entries_count %zu\n",bd->entries_count);
         memset( bd->entries, 0, sizeof(blob_data_t) * bd->entries_count );
         for( i = 0; i < bd->entries_count; i++ )
         {
@@ -812,6 +836,7 @@ int process_webcfgdbblob( blob_struct_t *bd, msgpack_object *obj )
             if( 0 != process_webcfgdbblobparams(&bd->entries[i], &array->ptr[i].via.map) )
             {
 		WebcfgError("process_webcfgdbblobparam failed\n");
+		WebcfgInfo("process_webcfgdbblobparam failed\n");
                 return -1;
             }
         }
@@ -823,10 +848,10 @@ char * base64blobencoder(char * blob_data, size_t blob_size )
 {
 	char* b64buffer =  NULL;
 	size_t encodeSize = -1;
-   	WebcfgDebug("Data is %s\n", blob_data);
+   	WebcfgInfo("Data is %s\n", blob_data);
      	WebcfgDebug("-----------Start of Base64 Encode ------------\n");
         encodeSize = b64_get_encoded_buffer_size(blob_size);
-        WebcfgDebug("encodeSize is %zu\n", encodeSize);
+        WebcfgInfo("encodeSize is %zu\n", encodeSize);
         b64buffer = malloc(encodeSize + 1);
        	b64_encode((uint8_t *)blob_data, blob_size, (uint8_t *)b64buffer); 
         b64buffer[encodeSize] = '\0' ;

@@ -51,6 +51,7 @@ void* helper_convert( const void *buf, size_t len,
                       destroy_fn_t destroy )
 {
     void *p = malloc( struct_size );
+	WebcfgInfo("helper_convert\n");
     if( NULL == p ) {
         errno = HELPERS_OUT_OF_MEMORY;
     } else {
@@ -67,16 +68,17 @@ void* helper_convert( const void *buf, size_t len,
             mp_rv = msgpack_unpack_next( &msg, (const char*) buf, len, &offset );
 	    //msgpack_object obj = msg.data;
 	    //msgpack_object_print(stdout, obj);
-	    //WebcfgDebug("\nMSGPACK_OBJECT_MAP is %d  msg.data.type %d\n", MSGPACK_OBJECT_MAP, msg.data.type);
+	    WebcfgInfo("\nMSGPACK_OBJECT_MAP is %d  msg.data.type %d\n", MSGPACK_OBJECT_MAP, msg.data.type);
 
             if( (MSGPACK_UNPACK_SUCCESS == mp_rv) && (0 != offset) &&
                 (MSGPACK_OBJECT_MAP == msg.data.type) )
             {
                 msgpack_object *inner;
-
+		 WebcfgInfo("\nMSGPACK_OBJECT_MAP is %d  MSGPACK_UNPACK_SUCCESS %d\n", MSGPACK_OBJECT_MAP, MSGPACK_UNPACK_SUCCESS);
                 inner = &msg.data;
                 if( NULL != wrapper ) {
                     inner = __finder( wrapper, expect_type, &msg.data.via.map );
+			WebcfgInfo("helper_convert wrapper\n"); 
                 }
 
                 if( ((true == optional) && (NULL == inner)) ||
@@ -84,10 +86,12 @@ void* helper_convert( const void *buf, size_t len,
                 {
                     msgpack_unpacked_destroy( &msg );
                     errno = HELPERS_OK;
+			WebcfgInfo("msgpack_unpacked_destroy\n"); 
                     return p;
                 }
             } else {
                 errno = HELPERS_INVALID_FIRST_ELEMENT;
+		WebcfgInfo("HELPERS_INVALID_FIRST_ELEMENT\n"); 
             }
 
             msgpack_unpacked_destroy( &msg );
