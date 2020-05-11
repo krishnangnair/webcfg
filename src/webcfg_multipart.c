@@ -19,6 +19,7 @@
 #include "webcfg_param.h"
 #include "webcfg_log.h"
 #include "webcfg_auth.h"
+#include "webcfg_db.h"
 #include "webcfg_generic.h"
 #include "webcfg_db.h"
 #include "webcfg_notify.h"
@@ -35,6 +36,8 @@
 #define WEBPA_CREATE_HEADER        "/etc/parodus/parodus_create_file.sh"
 #define CCSP_CRASH_STATUS_CODE      192
 #define ATOMIC_SET_WEBCONFIG	    3
+#define WEBCFG_URL_FILE 	   "/tmp/webcfg_url" //check here.
+#define WEBCFG_PORTFORWARDING_FILE "/tmp/webcfg_portforwarding"      
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
@@ -99,10 +102,10 @@ WEBCFG_STATUS webcfg_http_request(char **configData, int r_count, int status, lo
 	char *webConfigURL = NULL;
 	char *transID = NULL;
 	char docList[512] = {'\0'};
-	char configURL[256] = { 0 };
-	char c[] = "{mac}";
+	//char configURL[256] = { 0 };
+	//char c[] = "{mac}";
 	int rv = 0;
-
+	int len = 0;
 	int content_res=0;
 	struct token_data data;
 	data.size = 0;
@@ -126,8 +129,10 @@ WEBCFG_STATUS webcfg_http_request(char **configData, int r_count, int status, lo
 			*transaction_id = strdup(transID);
 			WEBCFG_FREE(transID);
 		}
+		readFromFile(WEBCFG_URL_FILE, &webConfigURL, &len );
+		loadInitURLFromFile(&webConfigURL);
 		//loadInitURLFromFile(&webConfigURL);
-		Get_Webconfig_URL(configURL);
+		/*Get_Webconfig_URL(configURL);
 		if(strlen(configURL)>0)
 		{
 			//Replace {mac} string from default init url with actual deviceMAC
@@ -142,7 +147,7 @@ WEBCFG_STATUS webcfg_http_request(char **configData, int r_count, int status, lo
 			curl_slist_free_all(headers_list);
 			curl_easy_cleanup(curl);
 			return WEBCFG_FAILURE;
-		}
+		}*/
 		WebcfgDebug("ConfigURL fetched is %s\n", webConfigURL);
 
 		//Update query param in the URL based on the existing doc names from db
@@ -174,6 +179,7 @@ WEBCFG_STATUS webcfg_http_request(char **configData, int r_count, int status, lo
 		if(strlen(g_interface) == 0)
 		{
 			get_webCfg_interface(&interface);
+			interface = strdup("wlan0");
 			if(interface !=NULL)
 		        {
 		               strncpy(g_interface, interface, sizeof(g_interface)-1);
@@ -468,7 +474,13 @@ WEBCFG_STATUS processMsgpackSubdoc(multipart_t *mp, char *transaction_id)
 						char *appended_doc = NULL;
 						appended_doc = webcfg_appendeddoc( mp->entries[m].name_space, mp->entries[m].etag, pm->entries[i].value, pm->entries[i].value_size);
 						reqParam[i].name = strdup(pm->entries[i].name);
+						WebcfgInfo("%zu appended_doc\n", strlen(appended_doc));
 						reqParam[i].value = strdup(appended_doc);
+						if(0 == strncasecmp(mp->entries[m].name_space,"portforwarding",strlen("portforwarding")))
+						{
+							WebcfgInfo("portforwarding value to File %s\n", WEBCFG_PORTFORWARDING_FILE);
+				writebase64ToDBFile(WEBCFG_PORTFORWARDING_FILE, reqParam[i].value);
+						}
 						reqParam[i].type = WDMP_BASE64;
 						WEBCFG_FREE(appended_doc);
 					}
@@ -968,8 +980,11 @@ void createCurlHeader( struct curl_slist *list, struct curl_slist **header_list,
 
 	WebcfgInfo("Start of createCurlheader\n");
 	//Fetch auth JWT token from cloud.
-	getAuthToken();
-	WebcfgDebug("get_global_auth_token() is %s\n", get_global_auth_token());
+	//getAuthToken();
+	int len=0; char *token= NULL;//check here
+	readFromFile("/tmp/webcfg_token", &token, &len );
+	strncpy(get_global_auth_token(), token, len);
+	WebConfigLog("get_global_auth_token() is %s\n", get_global_auth_token());
 
 	auth_header = (char *) malloc(sizeof(char)*MAX_HEADER_LEN);
 	if(auth_header !=NULL)

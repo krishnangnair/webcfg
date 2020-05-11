@@ -69,7 +69,6 @@ int process_webcfgdbblobparams( blob_data_t *e, msgpack_object_map *map );
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
-
 //To initialize the DB when DB file is present
 WEBCFG_STATUS initDB(char * db_file_path )
 {
@@ -823,13 +822,35 @@ char * base64blobencoder(char * blob_data, size_t blob_size )
 {
 	char* b64buffer =  NULL;
 	size_t encodeSize = -1;
-   	WebcfgDebug("Data is %s\n", blob_data);
-     	WebcfgDebug("-----------Start of Base64 Encode ------------\n");
+   	printf("Data is %s\n", blob_data);
+     	printf("-----------Start of Base64 Encode ------------\n");
         encodeSize = b64_get_encoded_buffer_size(blob_size);
         WebcfgDebug("encodeSize is %zu\n", encodeSize);
         b64buffer = malloc(encodeSize + 1);
        	b64_encode((uint8_t *)blob_data, blob_size, (uint8_t *)b64buffer); 
         b64buffer[encodeSize] = '\0' ;
 	return b64buffer;
+}
+int writebase64ToDBFile(char *base64_file_path, char *data)
+{
+	FILE *fp;
+	fp = fopen(base64_file_path , "w+");
+	if (fp == NULL)
+	{
+		WebcfgError("Failed to open base64_file in db %s\n", base64_file_path);
+		return 0;
+	}
+	if(data !=NULL)
+	{
+		fwrite(data, strlen(data), 1, fp);
+		fclose(fp);
+		return 1;
+	}
+	else
+	{
+		WebcfgError("WriteToJson failed, Data is NULL\n");
+		fclose(fp);
+		return 0;
+	}
 }
 

@@ -67,16 +67,17 @@ void* helper_convert( const void *buf, size_t len,
             mp_rv = msgpack_unpack_next( &msg, (const char*) buf, len, &offset );
 	    //msgpack_object obj = msg.data;
 	    //msgpack_object_print(stdout, obj);
-	    //WebcfgDebug("\nMSGPACK_OBJECT_MAP is %d  msg.data.type %d\n", MSGPACK_OBJECT_MAP, msg.data.type);
+	    printf("\nMSGPACK_OBJECT_MAP is %d  msg.data.type %d\n", MSGPACK_OBJECT_MAP, msg.data.type);
 
             if( (MSGPACK_UNPACK_SUCCESS == mp_rv) && (0 != offset) &&
                 (MSGPACK_OBJECT_MAP == msg.data.type) )
             {
                 msgpack_object *inner;
-
+		printf("----msg pack object wrapper----\n");
                 inner = &msg.data;
                 if( NULL != wrapper ) {
                     inner = __finder( wrapper, expect_type, &msg.data.via.map );
+			printf("----msg pack object wrapper1----\n");
                 }
 
                 if( ((true == optional) && (NULL == inner)) ||
@@ -84,6 +85,7 @@ void* helper_convert( const void *buf, size_t len,
                 {
                     msgpack_unpacked_destroy( &msg );
                     errno = HELPERS_OK;
+		    printf("----msgpack_unpacked_destroy----\n");
                     return p;
                 }
             } else {
