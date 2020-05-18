@@ -1456,7 +1456,7 @@ void failedDocsRetry()
 		if( strcmp(temp->status, "failed") == 0)
 		{
 			count++;
-			
+			WebcfgInfo("The subdoc failedDocsRetry\n");
 		}
 		temp= temp->next;
 	}
@@ -1468,7 +1468,7 @@ void failedDocsRetry()
 		if( strcmp(temp->status, "failed") == 0)
 		{
 			subdoc_names[i] = temp->name;
-			
+			WebcfgInfo("The subdoc %d temp->status\n", temp->status);
 		}
 		temp= temp->next;
 		i++;

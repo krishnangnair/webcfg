@@ -81,7 +81,7 @@ WEBCFG_STATUS initDB(char * db_file_path )
      int ch_count=0;
      webconfig_db_data_t* dm = NULL;
 
-     WebcfgDebug("DB file path is %s\n", db_file_path);
+     WebcfgInfo("DB file path is %s\n", db_file_path);
      fp = fopen(db_file_path,"rb");
 
      if (fp == NULL)
@@ -339,11 +339,13 @@ int get_successDocCount()
 
 int get_doc_fail()
 {
+    WebcfgInfo("webcfg_db get_doc_fail\n");
     return doc_fail_flag;
 }
 
 void set_doc_fail( int value)
 {
+    WebcfgInfo("webcfg_db set_doc_fail\n");
     doc_fail_flag = value;
 }
 

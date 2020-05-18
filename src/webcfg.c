@@ -60,7 +60,7 @@ void initWebConfigMultipartTask(unsigned long status)
 {
 	int err = 0;
 	pthread_t threadId;
-
+	WebcfgInfo("initWebConfigMultipartTask \n");
 	err = pthread_create(&threadId, NULL, WebConfigMultipartTask, (void *) status);
 	if (err != 0) 
 	{
@@ -96,9 +96,9 @@ void *WebConfigMultipartTask(void *status)
 	{
 		if(forced_sync)
 		{
-			WebcfgDebug("Triggered Forced sync\n");
+			WebcfgInfo("Triggered Forced sync\n");
 			processWebconfgSync((int)Status);
-			WebcfgDebug("reset forced_sync after sync\n");
+			WebcfgInfo("reset forced_sync after sync\n");
 			forced_sync = 0;
 			setForceSync("", "", 0);
 		}
@@ -120,26 +120,40 @@ void *WebConfigMultipartTask(void *status)
     		ts.tv_sec += 900;
 
 		WebcfgInfo("B4 sync_condition pthread_cond_timedwait\n");
-		rt = pthread_cond_timedwait(&sync_condition, &sync_mutex, &ts);
+		//rt = pthread_cond_timedwait(&sync_condition, &sync_mutex, &ts);
+		do {
+		WebcfgInfo("pthread_cond_timedwait The value of rt %d\n", rt);
+        	rt = pthread_cond_timedwait(&sync_condition, &sync_mutex, &ts);
+       		 }
+    		while (rt == 0);
 		WebcfgInfo("The retry flag value is %d\n", get_doc_fail());
 		WebcfgInfo("The value of rt %d\n", rt);
 
 		rv =0;
 
-		if(!rv && !g_shutdown)
+		if(rt == ETIMEDOUT && get_doc_fail() == 1)
+		{
+			WebcfgInfo("Inside the timedout condition\n");
+			set_doc_fail(0);
+			failedDocsRetry();
+			WebcfgInfo("AFter the failedDocsRetry\n");
+			
+		}
+
+		else if(!rv && !g_shutdown)
 		{
 			char *ForceSyncDoc = NULL;
 			char* ForceSyncTransID = NULL;
 
 			// Identify ForceSync based on docname
 			getForceSync(&ForceSyncDoc, &ForceSyncTransID);
-			WebcfgDebug("ForceSyncDoc %s ForceSyncTransID. %s\n", ForceSyncDoc, ForceSyncTransID);
+			WebcfgInfo("ForceSyncDoc %s ForceSyncTransID. %s\n", ForceSyncDoc, ForceSyncTransID);
 			if(ForceSyncTransID !=NULL)
 			{
 				if((ForceSyncDoc != NULL) && strlen(ForceSyncDoc)>0)
 				{
 					forced_sync = 1;
-					WebcfgDebug("Received signal interrupt to Force Sync\n");
+					WebcfgInfo("Received signal interrupt to Force Sync\n");
 					WEBCFG_FREE(ForceSyncDoc);
 					WEBCFG_FREE(ForceSyncTransID);
 				}
@@ -150,7 +164,7 @@ void *WebConfigMultipartTask(void *status)
 				}
 			}
 
-			WebcfgDebug("forced_sync is %d\n", forced_sync);
+			WebcfgInfo("forced_sync is %d\n", forced_sync);
 		}
 		else if(g_shutdown)
 		{
@@ -158,14 +172,7 @@ void *WebConfigMultipartTask(void *status)
 			pthread_mutex_unlock (&sync_mutex);
 			break;
 		}
-		else if(rt == ETIMEDOUT && get_doc_fail() == 1)
-		{
-			WebcfgInfo("Inside the timedout condition\n");
-			set_doc_fail(0);
-			failedDocsRetry();
-			WebcfgInfo("AFter the failedDocsRetry\n");
-			
-		}
+		
 		pthread_mutex_unlock(&sync_mutex);
 
 	}
@@ -183,7 +190,7 @@ void *WebConfigMultipartTask(void *status)
 	}
 	WebcfgInfo("B4 pthread_exit\n");
 	pthread_exit(0);
-	WebcfgDebug("After pthread_exit\n");
+	WebcfgInfo("After pthread_exit\n");
 	return NULL;
 }
 
@@ -221,7 +228,7 @@ void processWebconfgSync(int status)
 	char ct[256] = {0};
 	size_t dataSize=0;
 
-	WebcfgDebug("========= Start of processWebconfgSync =============\n");
+	WebcfgInfo("========= Start of processWebconfgSync =============\n");
 	while(1)
 	{
 		if(retry_count >3)
@@ -250,7 +257,7 @@ void processWebconfgSync(int status)
 		retry_count++;
 		WebcfgInfo("Webconfig retry_count is %d\n", retry_count);
 	}
-	WebcfgDebug("========= End of processWebconfgSync =============\n");
+	WebcfgInfo("========= End of processWebconfgSync =============\n");
 	return;
 }
 
@@ -272,7 +279,7 @@ int handlehttpResponse(long response_code, char *webConfigData, int retry_count,
 
 		if(webConfigData !=NULL)
 		{
-			WebcfgDebug("webConfigData fetched successfully\n");
+			WebcfgInfo("webConfigData fetched successfully\n");
 			WebcfgDebug("parseMultipartDocument\n");
 			msgpack_status = parseMultipartDocument(webConfigData, ct, dataSize, transaction_uuid);
 
@@ -302,7 +309,7 @@ int handlehttpResponse(long response_code, char *webConfigData, int retry_count,
 	{
 		WebcfgError("Token is expired, fetch new token. response_code:%ld\n", response_code);
 		createNewAuthToken(get_global_auth_token(), TOKEN_SIZE, get_deviceMAC(), get_global_serialNum() );
-		WebcfgDebug("createNewAuthToken done in 403 case\n");
+		WebcfgInfo("createNewAuthToken done in 403 case\n");
 		err = 1;
 	}
 	else if(response_code == 429)
@@ -323,7 +330,7 @@ int handlehttpResponse(long response_code, char *webConfigData, int retry_count,
 		WebcfgError("Error code returned, need to retry. response_code:%ld\n", response_code);
 		if(retry_count == 3 && !err)
 		{
-			WebcfgDebug("3 retry attempts\n");
+			WebcfgInfo("3 retry attempts\n");
 			WEBCFG_FREE(transaction_uuid);
 			return 0;
 		}
