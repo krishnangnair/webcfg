@@ -336,6 +336,10 @@ webconfig_tmp_data_t * get_global_tmp_node(void)
     pthread_mutex_unlock (&webconfig_tmp_data_mut);
     return tmp;
 }
+
+void set_global_tmp_node(webconfig_tmp_data_t *new)
+{
+    g_head = new;
 }
 
 int get_numOfMpDocs()

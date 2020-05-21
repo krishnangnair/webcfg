@@ -155,7 +155,7 @@ void* processWebConfgNotification()
 	char dest[512] = {'\0'};
 	char *source = NULL;
 
-	while(1)
+	while(FOREVER())
 	{
 		pthread_mutex_lock (&notify_mut);
 		WebcfgDebug("mutex lock in notify consumer thread\n");
