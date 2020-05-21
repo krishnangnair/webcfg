@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include <pthread.h>
 #include <base64.h>
 #include "webcfg.h"
 #include "webcfg_multipart.h"
@@ -101,6 +102,8 @@ blob_t * get_DB_BLOB();
 webconfig_db_data_t * get_global_db_node(void);
 
 webconfig_tmp_data_t * get_global_tmp_node(void);
+
+pthread_mutex_t *get_global_tmp_mut(void);
 
 WEBCFG_STATUS addToTmpList( multipart_t *mp);
 
