@@ -392,12 +392,13 @@ void* processSubdocEvents()
 						}
 					}
 				}
+				WEBCFG_FREE(eventParam);
 			}
 			else
 			{
 				WebcfgError("Failed to parse event Data\n");
 			}
-			//WEBCFG_FREE(Data);
+			WEBCFG_FREE(Data);
 		}
 		else
 		{
@@ -470,6 +471,7 @@ int parseEventData(char* str, event_params_t **val)
 			*val = param;
 			return WEBCFG_SUCCESS;
 		}
+		WEBCFG_FREE(param);
 	}
 	return WEBCFG_FAILURE;
 
