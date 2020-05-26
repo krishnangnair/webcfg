@@ -198,7 +198,7 @@ void test_eventNACK()
 	initWebConfigNotifyTask();
 	processWebcfgEvents();
 	initEventHandlingTask();
-	webcfgCallback("portforwarding,14464,410448631,NACK,0", NULL);
+	webcfgCallback("portforwarding,14464,410448631,NACK,0,pam,192,failed", NULL);
 	sleep(1);
 }
 
@@ -241,6 +241,37 @@ void test_eventEXPIRE()
 	initEventHandlingTask();
 	webcfgCallback("portforwarding,14464,0,EXPIRE,0", NULL);
 	sleep(1);
+	if(doc)
+	{
+		if(doc->entries)
+		{
+			WEBCFG_FREE(doc->entries->name_space);
+			WEBCFG_FREE(doc->entries->data);
+			WEBCFG_FREE(doc->entries);
+		}
+		WEBCFG_FREE(doc);
+	}
+}
+
+void test_eventEXPIREWithoutRetry()
+{
+	webconfig_tmp_data_t *tmpData = (webconfig_tmp_data_t *)malloc(sizeof(webconfig_tmp_data_t));
+	tmpData->name = strdup("homessid");
+	tmpData->version = 0;
+	tmpData->status = strdup("EXPIRE");
+	tmpData->trans_id = 14464;
+	tmpData->retry_count = 0;
+	tmpData->error_details = strdup("success");
+	tmpData->next = NULL;
+
+	set_global_tmp_node(tmpData);
+	set_global_transID("1234567");
+	numLoops = 2;
+	initWebConfigNotifyTask();
+	processWebcfgEvents();
+	initEventHandlingTask();
+	webcfgCallback("homessid,14464,0,EXPIRE,0", NULL);
+	sleep(1);
 }
 
 //privatessid,0,3097089542 (crash event)
@@ -263,14 +294,163 @@ void test_eventCrash()
 	sleep(1);
 }
 
+void test_eventCrashNewVersion()
+{
+	webconfig_tmp_data_t *tmpData = (webconfig_tmp_data_t *)malloc(sizeof(webconfig_tmp_data_t));
+	tmpData->name = strdup("privatessid");
+	tmpData->version = 3097089542;
+	tmpData->status = strdup("CRASH");
+	tmpData->trans_id = 14464;
+	tmpData->retry_count = 0;
+	tmpData->error_details = strdup("crash");
+	tmpData->next = NULL;
+
+	multipart_t *doc = (multipart_t *)malloc(sizeof(multipart_t));
+	doc->entries_count = 2;
+	doc->entries = (multipartdocs_t *)malloc(sizeof(multipartdocs_t));
+	doc->entries->name_space = strdup("privatessid");
+	doc->entries->etag = 12345;
+	int len = 0;
+	if(readFromFile("/tmp/input.bin", &doc->entries->data, &len))
+	{
+		printf("Data: %s\n",doc->entries->data);
+		doc->entries->data_size = len;
+		printf("Size: %ld\n",doc->entries->data_size);
+	}
+	else
+	{
+		printf("Failed to read file\n");
+		doc->entries->data = NULL;
+		doc->entries->data_size = 0;
+	}
+	set_global_tmp_node(tmpData);
+	set_global_mp(doc);
+	numLoops = 2;
+	initWebConfigNotifyTask();
+	processWebcfgEvents();
+	initEventHandlingTask();
+	webcfgCallback("privatessid,0,0", NULL);
+	sleep(1);
+	if(doc)
+	{
+		if(doc->entries)
+		{
+			WEBCFG_FREE(doc->entries->name_space);
+			WEBCFG_FREE(doc->entries->data);
+			WEBCFG_FREE(doc->entries);
+		}
+		WEBCFG_FREE(doc);
+	}
+}
+
+void test_eventCrashNewVersionWithoutRetry()
+{
+	webconfig_tmp_data_t *tmpData = (webconfig_tmp_data_t *)malloc(sizeof(webconfig_tmp_data_t));
+	tmpData->name = strdup("homessid");
+	tmpData->version = 3097089542;
+	tmpData->status = strdup("CRASH");
+	tmpData->trans_id = 14464;
+	tmpData->retry_count = 0;
+	tmpData->error_details = strdup("crash");
+	tmpData->next = NULL;
+	set_global_tmp_node(tmpData);
+	numLoops = 2;
+	initWebConfigNotifyTask();
+	processWebcfgEvents();
+	initEventHandlingTask();
+	webcfgCallback("homessid,0,309708942", NULL);
+	sleep(1);
+}
+
+void test_eventCrashSameVersion()
+{
+	webconfig_tmp_data_t *tmpData = (webconfig_tmp_data_t *)malloc(sizeof(webconfig_tmp_data_t));
+	tmpData->name = strdup("homessid");
+	tmpData->version = 3097089542;
+	tmpData->status = strdup("CRASH");
+	tmpData->trans_id = 14464;
+	tmpData->retry_count = 0;
+	tmpData->error_details = strdup("crash");
+	tmpData->next = NULL;
+	set_global_tmp_node(tmpData);
+	numLoops = 2;
+	initWebConfigNotifyTask();
+	processWebcfgEvents();
+	initEventHandlingTask();
+	webcfgCallback("homessid,0,3097089542", NULL);
+	sleep(1);
+}
+
+void err_eventACK()
+{
+	numLoops = 1;
+	initWebConfigNotifyTask();
+	processWebcfgEvents();
+	initEventHandlingTask();
+	webcfgCallback("privatessid,14464,410448631,ACK,0", NULL);
+	sleep(1);
+}
+
+void err_invalidACK()
+{
+	webconfig_tmp_data_t *tmpData = (webconfig_tmp_data_t *)malloc(sizeof(webconfig_tmp_data_t));
+	tmpData->name = strdup("privatessid");
+	tmpData->version = 4210448631;
+	tmpData->status = strdup("ACK");
+	tmpData->trans_id = 1464;
+	tmpData->retry_count = 0;
+	tmpData->error_details = strdup("success");
+	tmpData->next = NULL;
+	set_global_tmp_node(tmpData);
+	numLoops = 1;
+	initWebConfigNotifyTask();
+	processWebcfgEvents();
+	initEventHandlingTask();
+	webcfgCallback("privatessid,14464,410448631,ACK,0", NULL);
+	sleep(1);
+}
+
+void test_invalidVersionACK()
+{
+	webconfig_tmp_data_t *tmpData = (webconfig_tmp_data_t *)malloc(sizeof(webconfig_tmp_data_t));
+	tmpData->name = strdup("privatessid");
+	tmpData->version = 4210448631;
+	tmpData->status = strdup("ACK");
+	tmpData->trans_id = 14464;
+	tmpData->retry_count = 0;
+	tmpData->error_details = strdup("success");
+	tmpData->next = NULL;
+	set_global_tmp_node(tmpData);
+	numLoops = 2;
+	initWebConfigNotifyTask();
+	processWebcfgEvents();
+	initEventHandlingTask();
+	webcfgCallback("privatessid,14464,410448631,ACK,0", NULL);
+	sleep(1);
+	if(tmpData)
+	{
+		WEBCFG_FREE(tmpData->name);
+		WEBCFG_FREE(tmpData->status);
+		WEBCFG_FREE(tmpData->error_details);
+		WEBCFG_FREE(tmpData);
+	}
+}
+
 void add_suites( CU_pSuite *suite )
 {
     *suite = CU_add_suite( "tests", NULL, NULL );
     CU_add_test( *suite, "ACK Event\n", test_eventACK);
+	CU_add_test( *suite, "Invalid Version ACK Event\n",test_invalidVersionACK);
 	CU_add_test( *suite, "Timeout Event\n", test_eventTimeout);
 	CU_add_test( *suite, "NACK Event\n", test_eventNACK);
+	CU_add_test( *suite, "EXPIRE Event without retry\n", test_eventEXPIREWithoutRetry);
 	CU_add_test( *suite, "EXPIRE Event\n", test_eventEXPIRE);
 	CU_add_test( *suite, "Crash Event\n", test_eventCrash);
+	CU_add_test( *suite, "Crash Event New Version\n", test_eventCrashNewVersion);
+	CU_add_test( *suite, "Crash Event New Version without retry\n", test_eventCrashNewVersionWithoutRetry);
+	CU_add_test( *suite, "Crash Event same version\n", test_eventCrashSameVersion);
+	CU_add_test( *suite, "Invalid ACK Event\n",err_invalidACK);
+	CU_add_test( *suite, "Error ACK Event\n",err_eventACK);
 }
 
 /*----------------------------------------------------------------------------*/
