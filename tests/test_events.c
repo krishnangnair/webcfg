@@ -179,6 +179,13 @@ void test_eventTimeout()
 	initEventHandlingTask();
 	webcfgCallback("homessid,14464,410448631,ACK,60", NULL);
 	sleep(1);
+	if(tmpData)
+	{
+		WEBCFG_FREE(tmpData->name);
+		WEBCFG_FREE(tmpData->status);
+		WEBCFG_FREE(tmpData->error_details);
+		WEBCFG_FREE(tmpData);
+	}
 }
 
 //portforwarding,14464,410448631,NACK,0 (NACK event)
@@ -200,6 +207,13 @@ void test_eventNACK()
 	initEventHandlingTask();
 	webcfgCallback("portforwarding,14464,410448631,NACK,0,pam,192,failed", NULL);
 	sleep(1);
+	if(tmpData)
+	{
+		WEBCFG_FREE(tmpData->name);
+		WEBCFG_FREE(tmpData->status);
+		WEBCFG_FREE(tmpData->error_details);
+		WEBCFG_FREE(tmpData);
+	}
 }
 
 //portforwarding,14464,0,EXPIRE,0 (EXPIRE event)
@@ -272,6 +286,13 @@ void test_eventEXPIREWithoutRetry()
 	initEventHandlingTask();
 	webcfgCallback("homessid,14464,0,EXPIRE,0", NULL);
 	sleep(1);
+	if(tmpData)
+	{
+		WEBCFG_FREE(tmpData->name);
+		WEBCFG_FREE(tmpData->status);
+		WEBCFG_FREE(tmpData->error_details);
+		WEBCFG_FREE(tmpData);
+	}
 }
 
 //privatessid,0,3097089542 (crash event)
@@ -360,6 +381,13 @@ void test_eventCrashNewVersionWithoutRetry()
 	initEventHandlingTask();
 	webcfgCallback("homessid,0,309708942", NULL);
 	sleep(1);
+	if(tmpData)
+	{
+		WEBCFG_FREE(tmpData->name);
+		WEBCFG_FREE(tmpData->status);
+		WEBCFG_FREE(tmpData->error_details);
+		WEBCFG_FREE(tmpData);
+	}
 }
 
 void test_eventCrashSameVersion()
@@ -383,7 +411,7 @@ void test_eventCrashSameVersion()
 
 void err_eventACK()
 {
-	numLoops = 1;
+	numLoops = 2;
 	initWebConfigNotifyTask();
 	processWebcfgEvents();
 	initEventHandlingTask();
@@ -402,7 +430,7 @@ void err_invalidACK()
 	tmpData->error_details = strdup("success");
 	tmpData->next = NULL;
 	set_global_tmp_node(tmpData);
-	numLoops = 1;
+	numLoops = 2;
 	initWebConfigNotifyTask();
 	processWebcfgEvents();
 	initEventHandlingTask();
