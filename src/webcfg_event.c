@@ -111,7 +111,7 @@ void* blobEventHandler()
 	}
 
 	/* Loop to check timer expiry. When timer is not running, loop is active but wont check expiry until next timer starts. */
-	while(1)
+	while(FOREVER())
 	{
 		if (checkTimerExpired (&expired_doc))
 		{
@@ -222,7 +222,7 @@ void* processSubdocEvents()
 	webconfig_tmp_data_t * subdoc_node = NULL;
 	expire_timer_t * doctimer_node = NULL;
 
-	while(1)
+	while(FOREVER())
 	{
 		pthread_mutex_lock (&event_mut);
 		WebcfgDebug("mutex lock in event consumer thread\n");
