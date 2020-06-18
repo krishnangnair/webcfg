@@ -57,6 +57,14 @@ add_executable(test_events test_events.c ../src/webcfg_param.c ../src/webcfg_mul
 target_link_libraries (test_events -lcunit -lmsgpackc -lcurl -lpthread  -lm -luuid -ltrower-base64 -lwdmp-c -lcimplog -lcjson)
 
 target_link_libraries (test_events gcov -Wl,--no-as-needed )
+#-------------------------------------------------------------------------------
+#   test_mocaunpack
+#-------------------------------------------------------------------------------
+add_test(NAME test_mocaunpack COMMAND ${MEMORY_CHECK} ./test_mocaunpack)
+add_executable(test_mocaunpack test_mocaunpack.c ../src/moca_param.c ../src/comp_helpers.c)
+target_link_libraries (test_mocaunpack -lcunit -lmsgpackc -lcimplog -ltrower-base64)
+
+target_link_libraries (test_mocaunpack gcov -Wl,--no-as-needed )
 
 # Code coverage
 
