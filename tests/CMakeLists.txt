@@ -73,6 +73,14 @@ add_executable(test_lanunpack test_lanunpack.c ../src/lan_param.c ../src/comp_he
 target_link_libraries (test_lanunpack -lcunit -lmsgpackc -lcimplog -ltrower-base64)
 
 target_link_libraries (test_lanunpack gcov -Wl,--no-as-needed )
+#-------------------------------------------------------------------------------
+#   test_wanunpack
+#-------------------------------------------------------------------------------
+add_test(NAME test_wanunpack COMMAND ${MEMORY_CHECK} ./test_wanunpack)
+add_executable(test_wanunpack test_wanunpack.c ../src/wan_param.c ../src/comp_helpers.c)
+target_link_libraries (test_wanunpack -lcunit -lmsgpackc -lcimplog -ltrower-base64)
+
+target_link_libraries (test_wanunpack gcov -Wl,--no-as-needed )
 
 # Code coverage
 
