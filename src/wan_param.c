@@ -57,7 +57,7 @@ int process_wandoc( wandoc_t *wd, int num, ...);
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
-/* See portmappingdoc.h for details. */
+/* See wandoc.h for details. */
 wandoc_t* wandoc_convert( const void *buf, size_t len )
 {
 	return comp_helper_convert( buf, len, sizeof(wandoc_t), "wan", 
@@ -65,7 +65,7 @@ wandoc_t* wandoc_convert( const void *buf, size_t len )
                            (process_fn_t) process_wandoc,
                            (destroy_fn_t) wandoc_destroy );
 }
-/* See portmappingdoc.h for details. */
+/* See wandoc.h for details. */
 void wandoc_destroy( wandoc_t *wd )
 {
 	if( NULL != wd )
@@ -87,7 +87,7 @@ void wandoc_destroy( wandoc_t *wd )
 		free( wd );
 	}
 }
-/* See webcfgdoc.h for details. */
+/* See wandoc.h for details. */
 const char* wandoc_strerror( int errnum )
 {
     struct error_map {

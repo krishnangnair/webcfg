@@ -81,7 +81,14 @@ add_executable(test_wanunpack test_wanunpack.c ../src/wan_param.c ../src/comp_he
 target_link_libraries (test_wanunpack -lcunit -lmsgpackc -lcimplog -ltrower-base64)
 
 target_link_libraries (test_wanunpack gcov -Wl,--no-as-needed )
+#-------------------------------------------------------------------------------
+#   test_macbindingunpack
+#-------------------------------------------------------------------------------
+add_test(NAME test_macbindingunpack COMMAND ${MEMORY_CHECK} ./test_macbindingunpack)
+add_executable(test_macbindingunpack test_macbindingunpack.c ../src/macbinding_param.c ../src/comp_helpers.c)
+target_link_libraries (test_macbindingunpack -lcunit -lmsgpackc -lcimplog -ltrower-base64)
 
+target_link_libraries (test_macbindingunpack gcov -Wl,--no-as-needed )
 # Code coverage
 
 add_custom_target(coverage

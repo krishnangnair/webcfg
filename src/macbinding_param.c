@@ -15,15 +15,17 @@
  */
 #include <errno.h>
 #include <string.h>
-#include <msgpack.h>
 #include <stdarg.h>
+#include <msgpack.h>
 #include "webcfg_log.h"
 #include "comp_helpers.h"
-#include "moca_param.h"
+#include "macbinding_param.h"
+
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
 /* none */
+
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
@@ -45,41 +47,63 @@ enum {
     INVALID_OBJECT,
     INVALID_VERSION,
 };
+
 /*----------------------------------------------------------------------------*/
 /*                            File Scoped Variables                           */
 /*----------------------------------------------------------------------------*/
 /* none */
+
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
-int process_mocaparams( mocaparam_t *e, msgpack_object_map *map );
-int process_mocadoc( mocadoc_t *md, int num, ...); 
+int process_macdocparams( macdoc_t *e, msgpack_object_map *map );
+int process_macbindingdoc( macbindingdoc_t *md, int num, ... );
+
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
-/* See mocadoc.h for details. */
-mocadoc_t* mocadoc_convert( const void *buf, size_t len )
-{
-	return comp_helper_convert( buf, len, sizeof(mocadoc_t), "moca", 
-                            MSGPACK_OBJECT_MAP, true,
-                           (process_fn_t) process_mocadoc,
-                           (destroy_fn_t) mocadoc_destroy );
-}
-/* See mocadoc.h for details. */
-void mocadoc_destroy( mocadoc_t *md )
-{
-	if( NULL != md )
-	{
 
-		if( NULL != md->subdoc_name )
-		{
-			free( md->subdoc_name );
-		}
-		free( md );
-	}
+/* See macbindingdoc.h for details. */
+macbindingdoc_t* macbindingdoc_convert( const void *buf, size_t len )
+{
+	return comp_helper_convert( buf, len, sizeof(macbindingdoc_t), "macbinding",
+                           MSGPACK_OBJECT_ARRAY, true,
+                           (process_fn_t) process_macbindingdoc,
+                           (destroy_fn_t) macbindingdoc_destroy );
 }
-/* See mocadoc.h for details. */
-const char* mocadoc_strerror( int errnum )
+
+/* See macbindingdoc.h for details. */
+void macbindingdoc_destroy( macbindingdoc_t *md )
+{
+    if( NULL != md )
+    {
+        size_t i;
+        for( i = 0; i < md->entries_count; i++ )
+        {
+            if( NULL != md->entries[i].chaddr )
+            {
+                free( md->entries[i].chaddr );
+            }
+	    
+	    if( NULL != md->entries[i].yiaddr )
+            {
+                free( md->entries[i].yiaddr );
+            }
+        }
+        if( NULL != md->entries )
+        {
+            free( md->entries );
+        }
+	if( NULL != md->subdoc_name )
+	{
+	    free( md->subdoc_name );
+	}
+        free( md );
+    }
+}
+
+/* See macbindingdoc.h for details. */
+const char* macbindingdoc_strerror( int errnum )
 {
     struct error_map {
         int v;
@@ -93,17 +117,20 @@ const char* mocadoc_strerror( int errnum )
         { .v = 0, .txt = NULL }
     };
     int i = 0;
+
     while( (map[i].v != errnum) && (NULL != map[i].txt) ) { i++; }
+
     if( NULL == map[i].txt )
     {
-	WebcfgDebug("----mocadoc_strerror----\n");
         return "Unknown error.";
     }
+
     return map[i].txt;
 }
 /*----------------------------------------------------------------------------*/
 /*                             Internal functions                             */
 /*----------------------------------------------------------------------------*/
+
 /**
  *  Convert the msgpack map into the doc_t structure.
  *
@@ -112,24 +139,31 @@ const char* mocadoc_strerror( int errnum )
  *
  *  @return 0 on success, error otherwise
  */
-int process_mocaparams( mocaparam_t *e, msgpack_object_map *map )
+int process_macdocparams( macdoc_t *e, msgpack_object_map *map )
 {
     int left = map->size;
-    uint8_t objects_left = 0x01;
+    uint8_t objects_left = 0x02;
     msgpack_object_kv *p;
+
     p = map->ptr;
+
     while( (0 < objects_left) && (0 < left--) )
     {
         if( MSGPACK_OBJECT_STR == p->key.type )
         {
-              if( MSGPACK_OBJECT_BOOLEAN == p->val.type )
+              if( MSGPACK_OBJECT_STR == p->val.type )
               {
-                if( 0 == match(p, "Enable") )
+                if( 0 == match(p, "Yiaddr") )
                 {
-                    e->enable = p->val.via.boolean;
+                    e->yiaddr = strndup( p->val.via.str.ptr, p->val.via.str.size );
                     objects_left &= ~(1 << 0);
                 }
-            }
+                else if( 0 == match(p, "Chaddr") )
+                {
+                    e->chaddr = strndup( p->val.via.str.ptr, p->val.via.str.size );
+                    objects_left &= ~(1 << 1);
+                }
+              }
         }
            p++;
     }
@@ -142,14 +176,14 @@ int process_mocaparams( mocaparam_t *e, msgpack_object_map *map )
    
     return (0 == objects_left) ? 0 : -1;
 }
-int process_mocadoc( mocadoc_t *md,int num, ... )
+
+int process_macbindingdoc( macbindingdoc_t *md, int num, ... )
 {
-//To access the variable arguments use va_list 
 	va_list valist;
 	va_start(valist, num);//start of variable argument loop
 
 	msgpack_object *obj = va_arg(valist, msgpack_object *);//each usage of va_arg fn argument iterates by one time
-	msgpack_object_map *mapobj = &obj->via.map;
+	msgpack_object_array *array = &obj->via.array;
 
 	msgpack_object *obj1 = va_arg(valist, msgpack_object *);
 	md->subdoc_name = strndup( obj1->via.str.ptr, obj1->via.str.size );
@@ -159,24 +193,39 @@ int process_mocadoc( mocadoc_t *md,int num, ... )
 
 	msgpack_object *obj3 = va_arg(valist, msgpack_object *);
 	md->transaction_id = (uint16_t) obj3->via.u64;
+
 	va_end(valist);//End of variable argument loop
 
-
-	md->param = (mocaparam_t *) malloc( sizeof(mocaparam_t) );
-        if( NULL == md->param )
-        {
-	    WebcfgDebug("entries count malloc failed\n");
-            return -1;
-        }
-        memset( md->param, 0, sizeof(mocaparam_t));
-
-
-	if( 0 != process_mocaparams(md->param, mapobj) )
+	if( 0 < array->size )
 	{
-		WebcfgDebug("process_mocaparams failed\n");
-		return -1;
+		size_t i;
+		md->entries_count = array->size;
+
+		md->entries = (macdoc_t *) malloc( sizeof(macdoc_t) * md->entries_count );
+
+		if( NULL == md->entries )
+		{
+			md->entries_count = 0;
+			return -1;
+		}
+
+		memset( md->entries, 0, sizeof(macdoc_t) * md->entries_count );
+
+		for( i = 0; i < md->entries_count; i++ )
+		{
+			if( MSGPACK_OBJECT_MAP != array->ptr[i].type )
+			{
+				errno = INVALID_OBJECT;
+				return -1;
+			}
+
+			if( 0 != process_macdocparams(&md->entries[i], &array->ptr[i].via.map) )
+			{
+				WebcfgDebug("process_macdocparams failed\n");
+				return -1;
+			}
+		}
 	}
 
-    return 0;
+	return 0;
 }
-

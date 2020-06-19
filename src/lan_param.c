@@ -57,7 +57,7 @@ int process_landoc( landoc_t *ld, int num, ...);
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
-/* See portmappingdoc.h for details. */
+/* See landoc.h for details. */
 landoc_t* landoc_convert( const void *buf, size_t len )
 {
 	return comp_helper_convert( buf, len, sizeof(landoc_t), "lan", 
@@ -65,7 +65,7 @@ landoc_t* landoc_convert( const void *buf, size_t len )
                            (process_fn_t) process_landoc,
                            (destroy_fn_t) landoc_destroy );
 }
-/* See portmappingdoc.h for details. */
+/* See landoc.h for details. */
 void landoc_destroy( landoc_t *ld )
 {
 	if( NULL != ld )
@@ -98,7 +98,7 @@ void landoc_destroy( landoc_t *ld )
 		free( ld );
 	}
 }
-/* See webcfgdoc.h for details. */
+/* See landoc.h for details. */
 const char* landoc_strerror( int errnum )
 {
     struct error_map {
