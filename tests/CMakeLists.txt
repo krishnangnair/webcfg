@@ -89,6 +89,15 @@ add_executable(test_macbindingunpack test_macbindingunpack.c ../src/macbinding_p
 target_link_libraries (test_macbindingunpack -lcunit -lmsgpackc -lcimplog -ltrower-base64)
 
 target_link_libraries (test_macbindingunpack gcov -Wl,--no-as-needed )
+
+#-------------------------------------------------------------------------------
+#   test_xdnsunpack
+#-------------------------------------------------------------------------------
+add_test(NAME test_xdnsunpack COMMAND ${MEMORY_CHECK} ./test_xdnsunpack)
+add_executable(test_xdnsunpack test_xdnsunpack.c ../src/xdns_param.c ../src/comp_helpers.c)
+target_link_libraries (test_xdnsunpack -lcunit -lmsgpackc -lcimplog -ltrower-base64)
+
+target_link_libraries (test_xdnsunpack gcov -Wl,--no-as-needed )
 # Code coverage
 
 add_custom_target(coverage
