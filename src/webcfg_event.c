@@ -983,7 +983,7 @@ WEBCFG_STATUS validateEvent(webconfig_tmp_data_t *temp, char *docname, uint16_t 
 	if (NULL != temp)
 	{
 		WebcfgDebug("validateEvent: temp->name %s, temp->trans_id %hu\n",temp->name, temp->trans_id);
-		if( strcmp(docname, temp->name) == 0)
+		if((*docname =! NULL) && (strcmp(docname, temp->name) == 0))
 		{
 			if(txid == temp->trans_id)
 			{
@@ -1034,7 +1034,7 @@ void handleConnectedClientNotify(char *status)
 
 	if(status != NULL)
 	{
-		strcpy(tmpStr , status);
+		strncpy(tmpStr , status,(sizeof(tmpStr)-1));
 		token = strtok(tmpStr, s);
 		if( token != NULL )
 		{

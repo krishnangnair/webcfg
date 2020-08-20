@@ -92,7 +92,7 @@ void initWebcfgProperties(char * filename)
 			value = value + strlen("WEBCONFIG_SUPPORTED_DOCS_BIT=");
 			value[strlen(value)-1] = '\0';
 			temp_bit_token = strdup(value);
-                        value = NULL;
+			value = NULL;
 		}
 
 		if(NULL != (value =strstr(str,"WEBCONFIG_DOC_SCHEMA_VERSION")))
@@ -117,19 +117,22 @@ void initWebcfgProperties(char * filename)
 
 				char subdoc[100];
 				char *subtoken;
-				strcpy(subdoc,token);
+				strncpy(subdoc,token,(sizeof(subdoc)-1));
 				puts(subdoc);
 				subtoken = strtok(subdoc,":");//portforwarding or lan
 
 				if(subtoken == NULL)
 				{
+					fclose(fp);
+					WEBCFG_FREE(temp_bit_token);
+					WEBCFG_FREE(temp_version_token);
 					return;
 				}
 
-				strcpy(sdInfo[i].wtypestring,subtoken);
+				strncpy(sdInfo[i].wtypestring,subtoken,(sizeof(sdInfo[i].wtypestring)-1));
 				subtoken = strtok(NULL,":");//skip 1st value
 				subtoken = strtok(NULL,":");//true or false
-				strcpy(sdInfo[i].val,subtoken); 
+				strncpy(sdInfo[i].val,subtoken,(sizeof(sdInfo[i].val)-1)); 
 				token =strtok_r(p,",",&p);
 				i++;
 
@@ -162,13 +165,15 @@ void initWebcfgProperties(char * filename)
 	{
 		displaystruct(get_global_sdInfo(), getWebCount());
 	}
+	WEBCFG_FREE(temp_bit_token);
+	WEBCFG_FREE(temp_version_token);
 }
 
 void setsupportedDocs( char * value)
 {
 	if(value != NULL)
 	{
-		supported_bits = strdup(value);
+		supported_bits = strdup(value);		
 	}
 	else
 	{

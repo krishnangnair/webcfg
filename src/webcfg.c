@@ -420,7 +420,7 @@ int testUtility()
 			{
 				ptr1_count = memchr(ptr_count+1, '\r', test_dataSize - (ptr_count - data_body));
 				temp = strndup(ptr_count, (ptr1_count-ptr_count));
-				strcpy(ct,temp);
+				strncpy(ct,temp,(sizeof(ct)-1));
 				break;
 			}
 
