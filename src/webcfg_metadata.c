@@ -23,7 +23,8 @@
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
-#define MAXCHAR 1000
+#define MAXCHAR 1024
+#define MAXDOCS 32
 
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
@@ -31,7 +32,7 @@
 typedef struct
 {
     char name[256];//portforwarding or wlan
-    char support[10];//true or false;
+    char support[8];//true or false;
 }SubDocSupportMap_t;
 
 /*----------------------------------------------------------------------------*/
@@ -65,13 +66,13 @@ void initWebcfgProperties(char * filename)
 	char *p;
 	char *token;
 
-	sdInfo = (SubDocSupportMap_t *)malloc(sizeof(SubDocSupportMap_t) * MAXCHAR);
-	memset(sdInfo, 0, sizeof(SubDocSupportMap_t) * MAXCHAR);
+	sdInfo = (SubDocSupportMap_t *)malloc(sizeof(SubDocSupportMap_t) * MAXDOCS);
 	if( sdInfo==NULL )
 	{
 		WebcfgError("Unable to allocate memory");
 		return;
 	}
+	memset(sdInfo, 0, sizeof(SubDocSupportMap_t) * MAXDOCS);
 
 	WebcfgDebug("webcfg properties file path is %s\n", filename);
 	fp = fopen(filename,"r");
@@ -170,6 +171,7 @@ void setsupportedDocs( char * value)
 	if(value != NULL)
 	{
 		supported_bits = strdup(value);
+		WEBCFG_FREE(value);
 	}
 	else
 	{
@@ -182,6 +184,7 @@ void setsupportedVersion( char * value)
 	if(value != NULL)
 	{
 		supported_version = strdup(value);
+		WEBCFG_FREE(value);
 	}
 	else
 	{
@@ -191,13 +194,13 @@ void setsupportedVersion( char * value)
 
 char * getsupportedDocs()
 {
-	WebcfgInfo("The value in supportedbits get is %s\n",supported_bits);
+	WebcfgDebug("The value in supportedbits get is %s\n",supported_bits);
 	return supported_bits;
 }
 
 char * getsupportedVersion()
 {
-      WebcfgInfo("The value in supportedversion get is %s\n",supported_version);
+      WebcfgDebug("The value in supportedversion get is %s\n",supported_version);
       return supported_version;
 }
 
