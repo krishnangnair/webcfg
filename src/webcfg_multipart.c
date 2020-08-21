@@ -627,7 +627,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 					}
 					else
 					{
-						WebcfgInfo("setValues Failed. ccspStatus : %d\n", ccspStatus);
+						WebcfgError("setValues Failed. ccspStatus : %d\n", ccspStatus);
 						errd = mapStatus(ccspStatus);
 						WebcfgDebug("The errd value is %d\n",errd);
 
@@ -1156,7 +1156,7 @@ void createCurlHeader( struct curl_slist *list, struct curl_slist **header_list,
 	}
 	else
 	{
-		WebcfgError("Failed to get supportedVersion\n");
+		WebcfgInfo("Failed to get supportedVersion\n");
 	}
 
 	if(strlen(g_supportedDocs) ==0)

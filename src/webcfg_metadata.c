@@ -23,7 +23,8 @@
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
-#define MAXCHAR 1000
+#define MAXCHAR 1024
+#define MAXDOCS 32
 
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
@@ -31,7 +32,7 @@
 typedef struct
 {
     char name[256];//portforwarding or wlan
-    char support[10];//true or false;
+    char support[8];//true or false;
 }SubDocSupportMap_t;
 
 /*----------------------------------------------------------------------------*/
@@ -57,21 +58,19 @@ void initWebcfgProperties(char * filename)
 {
 	FILE *fp = NULL;
 	char str[MAXCHAR] = {'\0'};
-	char * temp_bit_token = NULL, * temp_version_token = NULL;
-	char * supported_bits_temp = NULL, * supported_version_temp = NULL;
 	//For WEBCONFIG_SUBDOC_MAP parsing
 	int i =0;
 	int line_index =0;
 	char *p;
 	char *token;
 
-	sdInfo = (SubDocSupportMap_t *)malloc(sizeof(SubDocSupportMap_t) * MAXCHAR);
-	memset(sdInfo, 0, sizeof(SubDocSupportMap_t) * MAXCHAR);
+	sdInfo = (SubDocSupportMap_t *)malloc(sizeof(SubDocSupportMap_t) * MAXDOCS);
 	if( sdInfo==NULL )
 	{
 		WebcfgError("Unable to allocate memory");
 		return;
 	}
+	memset(sdInfo, 0, sizeof(SubDocSupportMap_t) * MAXDOCS);
 
 	WebcfgDebug("webcfg properties file path is %s\n", filename);
 	fp = fopen(filename,"r");
@@ -88,19 +87,19 @@ void initWebcfgProperties(char * filename)
 
 		if(NULL != (value = strstr(str,"WEBCONFIG_SUPPORTED_DOCS_BIT=")))
 		{
-			WebcfgDebug("The value stored in temp_bit_token is %s\n", str);
+			WebcfgDebug("The value stored is %s\n", str);
 			value = value + strlen("WEBCONFIG_SUPPORTED_DOCS_BIT=");
 			value[strlen(value)-1] = '\0';
-			temp_bit_token = strdup(value);
+			setsupportedDocs(value);
                         value = NULL;
 		}
 
 		if(NULL != (value =strstr(str,"WEBCONFIG_DOC_SCHEMA_VERSION")))
 		{
-			WebcfgDebug("The value stored in temp_version_token is %s\n", str);
+			WebcfgDebug("The value stored is %s\n", str);
 			value = value + strlen("WEBCONFIG_DOC_SCHEMA_VERSION=");
 			value[strlen(value)-1] = '\0';
-			temp_version_token = strdup(value);
+			setsupportedVersion(value);
 			value = NULL;
 		}
 
@@ -141,24 +140,6 @@ void initWebcfgProperties(char * filename)
 	}
 	fclose(fp);
 
-	if(temp_bit_token != NULL)
-	{
-		supported_bits_temp = strdup(temp_bit_token);
-		setsupportedDocs(supported_bits_temp);
-		WebcfgDebug("Supported bits final %s value\n",supported_bits);
-		WEBCFG_FREE(temp_bit_token);
-		WEBCFG_FREE(supported_bits_temp);
-	}
-
-	if(temp_version_token != NULL)
-	{ 
-		supported_version_temp = strdup(temp_version_token);
-		setsupportedVersion(supported_version_temp);
-		WebcfgDebug("supported_version = %s value\n", supported_version);
-		WEBCFG_FREE(temp_version_token);
-		WEBCFG_FREE(supported_version_temp);
-	}
-
 	if(sdInfo != NULL)
 	{
 		displaystruct(get_global_sdInfo(), getWebCount());
@@ -191,13 +172,13 @@ void setsupportedVersion( char * value)
 
 char * getsupportedDocs()
 {
-	WebcfgInfo("The value in supportedbits get is %s\n",supported_bits);
+	WebcfgDebug("The value in supportedbits get is %s\n",supported_bits);
 	return supported_bits;
 }
 
 char * getsupportedVersion()
 {
-      WebcfgInfo("The value in supportedversion get is %s\n",supported_version);
+      WebcfgDebug("The value in supportedversion get is %s\n",supported_version);
       return supported_version;
 }
 
