@@ -710,6 +710,7 @@ void delete_tmp_doc_list()
 //Delete all docs other than root from tmp list based on sync type primary/secondary
 void delete_tmp_docs_list()
 {
+  // pthread_mutex_lock (&webconfig_tmp_data_mut);
    webconfig_tmp_data_t *temp = NULL;
    temp = get_global_tmp_node();
 
@@ -723,9 +724,8 @@ void delete_tmp_docs_list()
 		deleteFromTmpList(temp->name);
 	}
 	temp = temp->next;
-    }
-	//pthread_mutex_lock (&webconfig_tmp_data_mut); //TODO:mutex locks
-	//pthread_mutex_unlock (&webconfig_tmp_data_mut);
+}	
+    //pthread_mutex_unlock (&webconfig_tmp_data_mut);
 }
 
 //Update tmp root for primary sync
@@ -735,7 +735,9 @@ void checkTmpRootUpdate()
    {
 	WebcfgInfo("Inside tmp root Update\n");
 	webconfig_tmp_data_t * root_node = NULL;
+	//pthread_mutex_lock (&webconfig_tmp_data_mut);
 	root_node = getTmpNode("root");
+        //pthread_mutex_unlock (&webconfig_tmp_data_mut);
 	WebcfgInfo("Update root version %lu to tmp list.\n", (long)get_global_root());
 	updateTmpList(root_node, "root", get_global_root(), "pending", "none", 0, 0, 0);
    }

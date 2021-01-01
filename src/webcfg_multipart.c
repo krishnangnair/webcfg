@@ -89,15 +89,17 @@ void set_global_transID(char *id)
 multipartdocs_t * get_global_mp(void)
 {
     multipartdocs_t *tmp = NULL;
-   // pthread_mutex_lock (&multipart_t_mut);
+    pthread_mutex_lock (&multipart_t_mut);
     tmp = g_mp_head;
-   // pthread_mutex_unlock (&multipart_t_mut);
+    pthread_mutex_unlock (&multipart_t_mut);
     return tmp;
 }
 
 void set_global_mp(multipartdocs_t *new)
 {
+	pthread_mutex_lock (&multipart_t_mut);
 	g_mp_head = new;
+        pthread_mutex_unlock (&multipart_t_mut);
 }
 
 char * get_global_contentLen(void)
@@ -572,7 +574,8 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 	WebcfgInfo("mp->entries_count is %d\n",mp_count);
 
 	multipartdocs_t *mp = NULL;
-	mp = g_mp_head;
+	//pthread_mutex_lock (&multipart_t_mut);
+	mp = get_global_mp();
 
 	while(mp != NULL)
 	{
@@ -852,6 +855,7 @@ WEBCFG_STATUS processMsgpackSubdoc(char *transaction_id)
 		}
 		mp = mp->next;
 	}
+	//pthread_mutex_unlock (&multipart_t_mut);
 	WebcfgDebug("The current_doc_count is %d\n",current_doc_count);
 	WEBCFG_FREE(trans_id);
 	//multipart_destroy(mp);
