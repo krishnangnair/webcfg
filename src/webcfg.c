@@ -453,7 +453,7 @@ void processWebconfgSync(int status, char* docname)
 		else
 		{
 			WebcfgError("Failed to get webConfigData from cloud\n");
-			//WEBCFG_FREE(transaction_uuid);
+			WEBCFG_FREE(transaction_uuid);
 		}
 		WebcfgInfo("webcfg_http_request BACKOFF_SLEEP_DELAY_SEC is %d seconds\n", BACKOFF_SLEEP_DELAY_SEC);
 		sleep(BACKOFF_SLEEP_DELAY_SEC);
@@ -802,6 +802,7 @@ int readFWFiles(char* file_path, long *range)
 	FILE *fp = NULL;
 	char *data = NULL;
 	int ch_count=0;
+	size_t sz = 0;
 
 	fp = fopen(file_path,"r+");
 	if (fp == NULL)
@@ -810,21 +811,33 @@ int readFWFiles(char* file_path, long *range)
 		return WEBCFG_FAILURE;
 	}
 
-	fseek(fp, 0, SEEK_END);
+	fseek(fp, 0, SEEK_END); 
 	ch_count = ftell(fp);
+	if (ch_count == -1) {
+  		fclose(fp);
+  		WebcfgError("ftell failed.\n");
+  		return WEBCFG_FAILURE;
+	}
 	fseek(fp, 0, SEEK_SET);
 
 	data = (char *) malloc(sizeof(char) * (ch_count + 1));
 	if(NULL == data)
 	{
-		WebcfgError("Memory allocation for data failed.\n");
+		WebcfgError("Memory allocation for data failed...\n");
 		fclose(fp);
 		return WEBCFG_FAILURE;
 	}
 
 	WebcfgInfo("After data \n");
 	memset(data,0,(ch_count + 1));
-	fread(data, 1, ch_count,fp);
+	sz = fread(data, 1, ch_count,fp);
+     	if (sz == (size_t)-1) 
+		{	
+			fclose(fp);
+			WebcfgError("fread failed.\n");
+			WEBCFG_FREE(data);
+			return WEBCFG_FAILURE;
+		}
 
 	WebcfgInfo("The data is %s\n", data);
 
