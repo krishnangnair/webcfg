@@ -719,12 +719,34 @@ char* printTime(long long time)
 	return buf;
 }
 
+//Generate Random numbers fot Random Timer
+uint16_t generateRandom_key()
+{
+    FILE *fp;
+	uint16_t random_value,sz;
+	fp = fopen("/dev/urandom", "r");
+	if (fp == NULL){
+    		return 0;
+    	}    	
+	sz = fread(&random_value, sizeof(random_value), 1, fp);
+	if (!sz)
+	{	
+		fclose(fp);
+		WebcfgError("fread failed.\n");
+		return 0;
+	}
+	WebcfgDebug("generate randomnumber\n %d",random_value);
+	fclose(fp);		
+	return(random_value);
+}
+
 //To initialise maintenance random timer
 void initMaintenanceTimer()
 {
 	long time_val = 0;
 	long fw_start_time = 0;
 	long fw_end_time = 0;
+	uint16_t random_key = 0;
 
 	if( readFWFiles(FW_START_FILE, &fw_start_time) != WEBCFG_SUCCESS )
 	{
@@ -754,8 +776,8 @@ void initMaintenanceTimer()
 	set_global_fw_start_time( fw_start_time );
 	set_global_fw_end_time( fw_end_time );
 
-        srand(time(0));
-        time_val = (rand() % (fw_end_time - fw_start_time+ 1)) + fw_start_time;
+        random_key = generateRandom_key();
+        time_val = (random_key % (fw_end_time - fw_start_time+ 1)) + fw_start_time;
 
 	WebcfgInfo("The fw_start_time is %ld\n",get_global_fw_start_time());
 	WebcfgInfo("The fw_end_time is %ld\n",get_global_fw_end_time());
@@ -800,6 +822,7 @@ int readFWFiles(char* file_path, long *range)
 	FILE *fp = NULL;
 	char *data = NULL;
 	int ch_count=0;
+	size_t sz = 0;
 
 	fp = fopen(file_path,"r+");
 	if (fp == NULL)
@@ -810,6 +833,11 @@ int readFWFiles(char* file_path, long *range)
 
 	fseek(fp, 0, SEEK_END);
 	ch_count = ftell(fp);
+	if (ch_count == -1) {
+  		fclose(fp);
+  		WebcfgError("ftell failed.\n");
+  		return WEBCFG_FAILURE;
+	}
 	fseek(fp, 0, SEEK_SET);
 
 	data = (char *) malloc(sizeof(char) * (ch_count + 1));
@@ -822,7 +850,14 @@ int readFWFiles(char* file_path, long *range)
 
 	WebcfgDebug("After data \n");
 	memset(data,0,(ch_count + 1));
-	fread(data, 1, ch_count,fp);
+	sz = fread(data, 1, ch_count,fp);
+     	if (sz == (size_t)-1) 
+		{	
+			fclose(fp);
+			WebcfgError("fread failed.\n");
+			WEBCFG_FREE(data);
+			return WEBCFG_FAILURE;
+		}
 
 	WebcfgDebug("The data is %s\n", data);
 

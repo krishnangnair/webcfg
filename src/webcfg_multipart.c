@@ -202,7 +202,7 @@ WEBCFG_STATUS webcfg_http_request(char **configData, int r_count, int status, lo
 			if(docname != NULL && strlen(docname)>0)
 			{
 				WebcfgInfo("Supplementary sync for %s\n",docname);
-				strcpy(docname_upper , docname);
+				strncpy(docname_upper , docname,(sizeof(docname_upper)-1));
 				docname_upper[0] = toupper(docname_upper[0]);
 				WebcfgDebug("docname is %s and in uppercase is %s\n", docname, docname_upper);
 				Get_Supplementary_URL(docname_upper, configURL);
@@ -1007,6 +1007,7 @@ size_t headr_callback(char *buffer, size_t size, size_t nitems)
 							WEBCFG_FREE(g_contentLen);
 						}
 					}
+					g_contentLen = NULL;
 					g_contentLen = strdup(final_header);
 				}
 			}

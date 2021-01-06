@@ -92,4 +92,5 @@ int checkMaintenanceTimer();
 int readFWFiles(char* file_path, long *range);
 int maintenanceSyncSeconds();
 long getTimeInSeconds(long long time);
+uint16_t generateRandom_key();
 #endif
