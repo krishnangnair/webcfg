@@ -204,7 +204,7 @@ WEBCFG_STATUS webcfg_http_request(char **configData, int r_count, int status, lo
 			if(docname != NULL && strlen(docname)>0)
 			{
 				WebcfgInfo("Supplementary sync for %s\n",docname);
-				strcpy(docname_upper , docname);
+				strncpy(docname_upper , docname,(sizeof(docname_upper)-1));
 				docname_upper[0] = toupper(docname_upper[0]);
 				WebcfgDebug("docname is %s and in uppercase is %s\n", docname, docname_upper);
 				Get_Supplementary_URL(docname_upper, configURL);
@@ -2213,7 +2213,9 @@ void updateRootVersionToDB()
 		}
 		WebcfgDebug("free mp as all docs and root are updated to DB\n");
 		multipart_destroy(g_mp_head);
+		pthread_mutex_lock (&multipart_t_mut);
 		g_mp_head = NULL;
+		pthread_mutex_unlock (&multipart_t_mut);
 		WebcfgDebug("After free mp\n");
 	}
 }
